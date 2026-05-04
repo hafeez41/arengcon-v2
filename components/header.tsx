@@ -72,22 +72,21 @@ export function Header() {
             href="/"
             onClick={go("/")}
             aria-label="Arengcon home"
-            className="flex items-center gap-2.5"
+            className="flex items-center gap-3 md:gap-4"
           >
             {introDone ? (
               <motion.div
                 layoutId="brand-mark"
                 transition={{ layout: MORPH }}
-                className="flex items-center gap-2.5"
+                className="flex items-center gap-3 md:gap-4"
               >
-                <Logo className="h-7 w-7 md:h-8 md:w-8" priority />
-                <span className="text-[15px] font-medium tracking-tight md:text-[16px]">
+                <Logo className="h-12 w-12 md:h-16 md:w-16" priority />
+                <span className="font-bank text-[28px] font-medium uppercase leading-none tracking-[0.04em] md:text-[42px]">
                   Arengcon
                 </span>
               </motion.div>
             ) : (
-              // Reserve the same space during splash so layout doesn't jump
-              <span aria-hidden className="block h-7 w-[110px] md:h-8 md:w-[120px]" />
+              <span aria-hidden className="block h-12 w-[180px] md:h-16 md:w-[260px]" />
             )}
           </a>
 

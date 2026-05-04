@@ -55,11 +55,11 @@ export function IntroSplash({
       {/* Centered brand mark — sized large. Unmounts on "leaving" so the
           header's layoutId="brand-mark" picks up and animates the morph. */}
       {phase !== "leaving" && (
-        <div className="pointer-events-none fixed inset-0 z-[101] flex items-center justify-center">
+        <div className="pointer-events-none fixed inset-0 z-[101] flex items-center justify-center px-6">
           <motion.div
             layoutId="brand-mark"
             transition={{ layout: MORPH }}
-            className="flex items-center gap-4 md:gap-5"
+            className="flex items-center gap-6 md:gap-10"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.92, y: 12 }}
@@ -69,10 +69,10 @@ export function IntroSplash({
                 y: phase === "in" ? 12 : 0,
               }}
               transition={{ duration: 1.6, ease: [0.83, 0, 0.17, 1] }}
-              className="flex items-center gap-4 md:gap-5"
+              className="flex items-center gap-6 md:gap-10"
             >
-              <Logo className="h-14 w-14 md:h-20 md:w-20" priority />
-              <span className="text-[34px] font-medium tracking-tight md:text-[52px]">
+              <Logo className="h-28 w-28 md:h-44 md:w-44" priority />
+              <span className="font-bank text-[72px] font-medium uppercase leading-none tracking-[0.04em] md:text-[136px]">
                 Arengcon
               </span>
             </motion.div>
