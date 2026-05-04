@@ -3,7 +3,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect } from "react";
 import { Header } from "./header";
-import { Footer } from "./footer";
 import { ThemeProvider } from "./theme-provider";
 import { SpaRouterProvider, useRouterPath } from "./spa-router";
 import { resolveView } from "./views";
@@ -22,7 +21,6 @@ export function SpaShell({ initialPath }: { initialPath: string }) {
         <main className="relative">
           <RouteOutlet />
         </main>
-        <Footer />
       </SpaRouterProvider>
     </ThemeProvider>
   );
