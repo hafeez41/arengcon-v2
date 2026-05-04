@@ -12,8 +12,9 @@ export default {
         muted: "rgb(var(--muted-rgb) / <alpha-value>)",
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        sans: ["var(--font-bank)", "system-ui", "sans-serif"],
         bank: ["var(--font-bank)", "system-ui", "sans-serif"],
+        body: ["var(--font-inter)", "system-ui", "sans-serif"],
       },
       letterSpacing: {
         editorial: "-0.012em",
