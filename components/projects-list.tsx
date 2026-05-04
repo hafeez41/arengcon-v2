@@ -17,15 +17,34 @@ import type { AdminProject } from "@/lib/admin-store";
 
 export type FilterKey = "all" | Category;
 
-const SMOOTH = { duration: 0.55, ease: [0.16, 1, 0.3, 1] as const };
+const SMOOTH = { duration: 0.6, ease: [0.16, 1, 0.3, 1] as const };
+const SWITCH_DELAY_MS = 520; // close-then-open hand-off
 
 export function ProjectsList({ filter }: { filter: FilterKey }) {
   const { list, adminProjects } = useEffectiveProjects();
   const [expanded, setExpanded] = useState<string | null>(null);
+  const transitioning = useRef(false);
 
   useEffect(() => {
     setExpanded(null);
   }, [filter]);
+
+  const handleClick = (slug: string) => {
+    if (transitioning.current) return;
+    setExpanded((cur) => {
+      if (cur === slug) return null; // collapse same project
+      if (cur !== null) {
+        // Switching: close current first, then expand new after collapse settles
+        transitioning.current = true;
+        window.setTimeout(() => {
+          setExpanded(slug);
+          transitioning.current = false;
+        }, SWITCH_DELAY_MS);
+        return null;
+      }
+      return slug;
+    });
+  };
 
   const filtered =
     filter === "all" ? list : list.filter((p) => p.category === filter);
@@ -37,17 +56,16 @@ export function ProjectsList({ filter }: { filter: FilterKey }) {
           <motion.li
             key={p.slug}
             layout="position"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={SMOOTH}
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
           >
             <ProjectRow
               project={p}
               expanded={expanded === p.slug}
-              onToggle={() =>
-                setExpanded((cur) => (cur === p.slug ? null : p.slug))
-              }
+              onClick={() => handleClick(p.slug)}
               adminProjects={adminProjects}
             />
           </motion.li>
@@ -60,32 +78,42 @@ export function ProjectsList({ filter }: { filter: FilterKey }) {
 function ProjectRow({
   project,
   expanded,
-  onToggle,
+  onClick,
   adminProjects,
 }: {
   project: Project;
   expanded: boolean;
-  onToggle: () => void;
+  onClick: () => void;
   adminProjects: AdminProject[];
 }) {
   const cat = CATEGORY_LABELS[project.category];
   const gallery = projectGallery(project, adminProjects);
   const ref = useRef<HTMLDivElement | null>(null);
 
+  // Smoothly bring the expanded project into the upper part of the viewport.
+  // Fires after a tick so the layout has begun expanding before scrolling.
   useEffect(() => {
     if (!expanded || !ref.current) return;
-    const top = ref.current.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({ top: Math.max(0, top - 100), behavior: "smooth" });
+    const el = ref.current;
+    const id = window.requestAnimationFrame(() => {
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      const target = Math.max(0, top - 110);
+      // Only scroll if we're far from the right spot
+      if (Math.abs(target - window.scrollY) > 4) {
+        window.scrollTo({ top: target, behavior: "smooth" });
+      }
+    });
+    return () => window.cancelAnimationFrame(id);
   }, [expanded]);
 
   return (
     <div ref={ref} className="mx-auto w-full max-w-[1100px] px-5 md:px-8">
       <div className="grid grid-cols-12 items-start gap-x-6 gap-y-8 md:gap-x-8">
-        {/* Title column - always rendered, metadata height-animated below */}
+        {/* Title column */}
         <div className="col-span-12 row-start-2 md:col-span-3 md:col-start-2 md:row-start-1">
           <button
             type="button"
-            onClick={onToggle}
+            onClick={onClick}
             className="block w-full text-left"
             aria-expanded={expanded}
           >
@@ -125,7 +153,7 @@ function ProjectRow({
         {/* Image column */}
         <button
           type="button"
-          onClick={onToggle}
+          onClick={onClick}
           className="group col-span-12 row-start-1 block md:col-span-5 md:col-start-5"
           aria-label={`${expanded ? "Collapse" : "Expand"} ${project.title}`}
         >
@@ -140,7 +168,7 @@ function ProjectRow({
           </div>
         </button>
 
-        {/* Description column - always in grid, fades by opacity (no DOM mount/unmount) */}
+        {/* Description column */}
         <motion.div
           initial={false}
           animate={{ opacity: expanded ? 1 : 0 }}
@@ -160,7 +188,7 @@ function ProjectRow({
         </motion.div>
       </div>
 
-      {/* Extended horizontal gallery — height animates 0 ↔ auto */}
+      {/* Extended horizontal gallery */}
       {gallery.length > 1 && (
         <motion.div
           initial={false}
@@ -194,7 +222,6 @@ function Pictogram({ project }: { project: Project }) {
 
 function CategoryGlyph({ category }: { category: Category }) {
   if (category === "arch") {
-    // Building elevation — pitched roof, two windows, door
     return (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" strokeLinejoin="miter">
         <path d="M4 11l8-6 8 6" />
@@ -206,7 +233,6 @@ function CategoryGlyph({ category }: { category: Category }) {
     );
   }
   if (category === "int") {
-    // Floor plan — partitioned rooms with door swing
     return (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" strokeLinejoin="miter">
         <rect x="3" y="4" width="18" height="16" />
@@ -218,7 +244,6 @@ function CategoryGlyph({ category }: { category: Category }) {
       </svg>
     );
   }
-  // Construction — truss bridge profile with deck
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" strokeLinejoin="miter">
       <path d="M2 16h20" />
