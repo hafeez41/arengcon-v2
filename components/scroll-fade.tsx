@@ -14,8 +14,13 @@ export function ScrollFade({ children }: { children: ReactNode }) {
     target: ref,
     offset: ["start 92%", "start 55%"],
   });
+  // Opacity rides the full progress range — fades smoothly as the row crosses
+  // into view. Scale resolves earlier (in the first 60% of the range) so that
+  // by the time a row is visible it's already at its final size, and we don't
+  // get visible "empty" space inside its layout box from a still-shrunken
+  // element.
   const opacity = useTransform(scrollYProgress, [0, 1], [0, 1]);
-  const scale = useTransform(scrollYProgress, [0, 1], [0.92, 1]);
+  const scale = useTransform(scrollYProgress, [0, 0.6], [0.94, 1]);
 
   return (
     <motion.div
