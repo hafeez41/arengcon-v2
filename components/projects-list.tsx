@@ -17,34 +17,21 @@ import type { AdminProject } from "@/lib/admin-store";
 
 export type FilterKey = "all" | Category;
 
-const SMOOTH = { duration: 0.85, ease: [0.22, 1, 0.36, 1] as const };
-const SOFT_ENTRY = { duration: 1.05, ease: [0.22, 1, 0.36, 1] as const };
-const SWITCH_DELAY_MS = 720;
+// Long, soft easing — same on every animation so they breathe together
+const FLOAT = { duration: 1.4, ease: [0.22, 1, 0.36, 1] as const };
+const ENTRY = { duration: 1.2, ease: [0.22, 1, 0.36, 1] as const };
 
 export function ProjectsList({ filter }: { filter: FilterKey }) {
   const { list, adminProjects } = useEffectiveProjects();
   const [expanded, setExpanded] = useState<string | null>(null);
-  const transitioning = useRef(false);
 
   useEffect(() => {
     setExpanded(null);
   }, [filter]);
 
   const handleClick = (slug: string) => {
-    if (transitioning.current) return;
-    setExpanded((cur) => {
-      if (cur === slug) return null; // collapse same project
-      if (cur !== null) {
-        // Switching: close current first, then expand new after collapse settles
-        transitioning.current = true;
-        window.setTimeout(() => {
-          setExpanded(slug);
-          transitioning.current = false;
-        }, SWITCH_DELAY_MS);
-        return null;
-      }
-      return slug;
-    });
+    // Simultaneous swap — framer cross-fades both projects in place
+    setExpanded((cur) => (cur === slug ? null : slug));
   };
 
   const filtered =
@@ -57,11 +44,11 @@ export function ProjectsList({ filter }: { filter: FilterKey }) {
           <motion.li
             key={p.slug}
             layout="position"
-            initial={{ opacity: 0, y: 32 }}
+            initial={{ opacity: 0, y: 36 }}
             whileInView={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={SOFT_ENTRY}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={ENTRY}
           >
             <ProjectRow
               project={p}
@@ -89,13 +76,21 @@ function ProjectRow({
 }) {
   const cat = CATEGORY_LABELS[project.category];
   const gallery = projectGallery(project, adminProjects);
-  const ref = useRef<HTMLDivElement | null>(null);
 
   return (
-    <div ref={ref} className="mx-auto w-full max-w-[1100px] px-5 md:px-8">
+    <div className="mx-auto w-full max-w-[1180px] px-5 md:px-8">
       <div className="grid grid-cols-12 items-start gap-x-6 gap-y-8 md:gap-x-8">
-        {/* Title column */}
-        <div className="col-span-12 row-start-2 md:col-span-3 md:col-start-2 md:row-start-1">
+        {/* Title column — slides via layout */}
+        <motion.div
+          layout
+          transition={{ layout: FLOAT }}
+          className={clsx(
+            "col-span-12 row-start-2 md:row-start-1",
+            expanded
+              ? "md:col-span-3 md:col-start-1"
+              : "md:col-span-3 md:col-start-2",
+          )}
+        >
           <button
             type="button"
             onClick={onClick}
@@ -117,7 +112,7 @@ function ProjectRow({
               height: expanded ? "auto" : 0,
               opacity: expanded ? 1 : 0,
             }}
-            transition={{ ...SMOOTH, delay: expanded ? 0.05 : 0 }}
+            transition={FLOAT}
             style={{ overflow: "hidden" }}
           >
             <dl className="mt-10 space-y-5">
@@ -133,31 +128,43 @@ function ProjectRow({
               </div>
             </dl>
           </motion.div>
-        </div>
+        </motion.div>
 
-        {/* Image column */}
-        <button
+        {/* Image — grows via layout (FLIP) */}
+        <motion.button
+          layout
+          transition={{ layout: FLOAT }}
           type="button"
           onClick={onClick}
-          className="group col-span-12 row-start-1 block md:col-span-5 md:col-start-5"
+          className={clsx(
+            "group col-span-12 row-start-1 block",
+            expanded
+              ? "md:col-span-6 md:col-start-4"
+              : "md:col-span-5 md:col-start-5",
+          )}
           aria-label={`${expanded ? "Collapse" : "Expand"} ${project.title}`}
         >
-          <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink/[0.04]">
+          <motion.div
+            layout
+            transition={{ layout: FLOAT }}
+            className="relative aspect-[4/3] w-full overflow-hidden bg-ink/[0.04]"
+          >
             <SmartImage
               src={project.image}
               alt={project.title}
               fill
-              sizes="(max-width: 768px) 100vw, 480px"
-              className="object-cover transition-transform duration-[1.2s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.02]"
+              sizes="(max-width: 768px) 100vw, 600px"
+              className="object-cover"
             />
-          </div>
-        </button>
+          </motion.div>
+        </motion.button>
 
-        {/* Description column */}
+        {/* Description — opacity only, always in grid */}
         <motion.div
+          layout
           initial={false}
           animate={{ opacity: expanded ? 1 : 0 }}
-          transition={{ ...SMOOTH, delay: expanded ? 0.18 : 0 }}
+          transition={{ ...FLOAT, layout: FLOAT }}
           aria-hidden={!expanded}
           className={clsx(
             "col-span-12 row-start-3 md:col-span-3 md:col-start-10 md:row-start-1",
@@ -181,7 +188,7 @@ function ProjectRow({
             height: expanded ? "auto" : 0,
             opacity: expanded ? 1 : 0,
           }}
-          transition={{ ...SMOOTH, delay: expanded ? 0.22 : 0 }}
+          transition={FLOAT}
           aria-hidden={!expanded}
           style={{ overflow: "hidden" }}
         >
