@@ -1,7 +1,7 @@
 "use client";
 
 import { ProjectsList, type FilterKey } from "./projects-list";
-import { NewsList } from "./news-list";
+import { UpdatesList } from "./updates-list";
 import { FILTER_FROM_PATH } from "./header";
 
 export function HomeView({ filter = "all" }: { filter?: FilterKey } = {}) {
@@ -10,7 +10,11 @@ export function HomeView({ filter = "all" }: { filter?: FilterKey } = {}) {
       <div className="h-[72px] md:h-[88px]" aria-hidden />
       <section className="pb-32 md:pb-40">
         <div className="pt-12 md:pt-16">
-          {filter === "news" ? <NewsList /> : <ProjectsList filter={filter} />}
+          {filter === "updates" ? (
+            <UpdatesList />
+          ) : (
+            <ProjectsList filter={filter} />
+          )}
         </div>
       </section>
     </>
@@ -47,9 +51,11 @@ export function resolveView(path: string): React.ReactNode {
   const filter = FILTER_FROM_PATH(clean);
   if (clean === "/" || filter !== "all") return <HomeView filter={filter} />;
 
+  // Legacy
   if (clean === "/architecture") return <HomeView filter="arch" />;
   if (clean === "/interior-design") return <HomeView filter="int" />;
   if (clean === "/construction") return <HomeView filter="cons" />;
+  if (clean === "/news" || clean === "/updates") return <HomeView filter="updates" />;
 
   return <NotFoundView />;
 }

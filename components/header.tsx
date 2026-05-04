@@ -12,20 +12,20 @@ import type { Category } from "@/lib/projects";
 
 const MORPH = { duration: 1.2, ease: [0.22, 1, 0.36, 1] as const };
 
-type FilterKey = "all" | Category | "news";
+type FilterKey = "all" | Category | "updates";
 
 const FILTERS: { key: FilterKey; label: string; href: string }[] = [
   { key: "arch", label: "Architecture", href: "/architecture" },
   { key: "int", label: "Interiors", href: "/interiors" },
   { key: "cons", label: "Construction", href: "/construction" },
-  { key: "news", label: "News", href: "/news" },
+  { key: "updates", label: "Updates", href: "/updates" },
 ];
 
 export function FILTER_FROM_PATH(path: string): FilterKey {
   if (path.startsWith("/architecture")) return "arch";
   if (path.startsWith("/interiors")) return "int";
   if (path.startsWith("/construction")) return "cons";
-  if (path.startsWith("/news")) return "news";
+  if (path.startsWith("/updates") || path.startsWith("/news")) return "updates";
   return "all";
 }
 
@@ -33,7 +33,7 @@ function labelFor(f: FilterKey): string {
   if (f === "arch") return "Architecture";
   if (f === "int") return "Interiors";
   if (f === "cons") return "Construction";
-  if (f === "news") return "News";
+  if (f === "updates") return "Updates";
   return "All work";
 }
 

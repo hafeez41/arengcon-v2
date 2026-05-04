@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { SmartImage } from "./smart-image";
+import { ScrollFade } from "./scroll-fade";
 import {
   CATEGORY_LABELS,
   type Category,
@@ -15,7 +16,7 @@ import {
 } from "@/lib/effective-data";
 import type { AdminProject } from "@/lib/admin-store";
 
-export type FilterKey = "all" | Category;
+export type FilterKey = "all" | Category | "updates";
 
 // Long, soft easing — same on every animation so they breathe together
 const FLOAT = { duration: 1.4, ease: [0.22, 1, 0.36, 1] as const };
@@ -39,23 +40,24 @@ export function ProjectsList({ filter }: { filter: FilterKey }) {
 
   return (
     <ul className="flex flex-col gap-y-24 md:gap-y-32">
-      <AnimatePresence mode="popLayout" initial={false}>
+      <AnimatePresence mode="popLayout" initial={true}>
         {filtered.map((p) => (
           <motion.li
-            key={p.slug}
+            key={`${filter}-${p.slug}`}
             layout="position"
-            initial={{ opacity: 0, y: 36 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            viewport={{ once: true, margin: "-40px" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={ENTRY}
           >
-            <ProjectRow
-              project={p}
-              expanded={expanded === p.slug}
-              onClick={() => handleClick(p.slug)}
-              adminProjects={adminProjects}
-            />
+            <ScrollFade>
+              <ProjectRow
+                project={p}
+                expanded={expanded === p.slug}
+                onClick={() => handleClick(p.slug)}
+                adminProjects={adminProjects}
+              />
+            </ScrollFade>
           </motion.li>
         ))}
       </AnimatePresence>

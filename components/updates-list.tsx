@@ -1,39 +1,41 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import clsx from "clsx";
 import { SmartImage } from "./smart-image";
+import { ScrollFade } from "./scroll-fade";
 import { type Update } from "@/lib/updates";
 import { useEffectiveUpdates } from "@/lib/effective-data";
 
 const FLOAT = { duration: 1.4, ease: [0.22, 1, 0.36, 1] as const };
 const ENTRY = { duration: 1.2, ease: [0.22, 1, 0.36, 1] as const };
 
-export function NewsList() {
+export function UpdatesList() {
   const { list } = useEffectiveUpdates();
   const [expanded, setExpanded] = useState<string | null>(null);
 
   return (
     <ul className="flex flex-col gap-y-20 md:gap-y-28">
-      <AnimatePresence mode="popLayout" initial={false}>
+      <AnimatePresence mode="popLayout" initial={true}>
         {list.map((u) => (
           <motion.li
-            key={u.slug}
+            key={`updates-${u.slug}`}
             layout="position"
-            initial={{ opacity: 0, y: 32 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            viewport={{ once: true, margin: "-40px" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={ENTRY}
           >
-            <NewsRow
-              update={u}
-              expanded={expanded === u.slug}
-              onClick={() =>
-                setExpanded((cur) => (cur === u.slug ? null : u.slug))
-              }
-            />
+            <ScrollFade>
+              <UpdateRow
+                update={u}
+                expanded={expanded === u.slug}
+                onClick={() =>
+                  setExpanded((cur) => (cur === u.slug ? null : u.slug))
+                }
+              />
+            </ScrollFade>
           </motion.li>
         ))}
       </AnimatePresence>
@@ -41,7 +43,7 @@ export function NewsList() {
   );
 }
 
-function NewsRow({
+function UpdateRow({
   update,
   expanded,
   onClick,
