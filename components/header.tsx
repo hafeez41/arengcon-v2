@@ -51,25 +51,25 @@ export function Header() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-40 bg-paper/90 backdrop-blur-md">
-        <div className="relative mx-auto flex w-full max-w-[1800px] items-center justify-between gap-4 px-5 py-4 md:px-8 md:py-5">
+      <header className="fixed inset-x-0 top-0 z-40 bg-paper/95 backdrop-blur">
+        <div className="relative mx-auto flex w-full items-center justify-between gap-4 px-5 py-4 md:px-8 md:py-5">
           <a
             href="/"
             onClick={go("/")}
             aria-label="Arengcon home"
-            className="text-[18px] tracking-tight font-medium"
+            className="grid h-7 place-items-center bg-ink px-2.5 text-[12px] font-bold tracking-[0.06em] text-paper md:h-8 md:text-[13px]"
           >
-            Arengcon
+            ARNG
           </a>
 
-          <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-10 md:flex lg:gap-16">
+          <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-12 md:flex lg:gap-20">
             {FILTERS.map((f) => (
               <a
                 key={f.key}
                 href={f.href}
                 onClick={go(f.href)}
                 className={clsx(
-                  "relative text-[12px] uppercase tracking-[0.14em] transition-colors",
+                  "relative text-[11px] font-medium uppercase tracking-[0.18em] transition-colors md:text-[12px]",
                   active === f.key ? "text-ink" : "text-muted hover:text-ink",
                 )}
               >
@@ -85,15 +85,15 @@ export function Header() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={() => setSearchOpen(true)}
               aria-label="Search"
-              className="grid h-8 w-8 place-items-center rounded-full transition-colors hover:bg-ink/5"
+              className="grid h-8 w-8 place-items-center transition-colors hover:bg-ink/5"
             >
               <svg
-                width="16"
-                height="16"
+                width="15"
+                height="15"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -104,24 +104,53 @@ export function Header() {
                 <path d="m20 20-3.5-3.5" />
               </svg>
             </button>
+            <a
+              href={
+                active === "all"
+                  ? "/architecture"
+                  : active === "arch"
+                    ? "/interiors"
+                    : active === "int"
+                      ? "/construction"
+                      : "/architecture"
+              }
+              onClick={go(
+                active === "all"
+                  ? "/architecture"
+                  : active === "arch"
+                    ? "/interiors"
+                    : active === "int"
+                      ? "/construction"
+                      : "/architecture",
+              )}
+              className="hidden text-[10.5px] uppercase tracking-[0.16em] text-muted transition-colors hover:text-ink md:inline"
+            >
+              {active === "all"
+                ? "Browse"
+                : active === "arch"
+                  ? "Architecture"
+                  : active === "int"
+                    ? "Interiors"
+                    : "Construction"}
+            </a>
             <button
               onClick={toggle}
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              className="grid h-8 w-8 place-items-center rounded-full transition-colors hover:bg-ink/5"
+              className="grid h-8 w-8 place-items-center transition-colors hover:bg-ink/5"
             >
               <ThemeIcon dark={theme === "dark"} />
             </button>
           </div>
         </div>
 
-        <nav className="flex items-center justify-center gap-6 border-t border-line/0 px-5 pb-3 md:hidden">
+        <nav className="flex items-center justify-center gap-6 px-5 pb-3 md:hidden">
           {FILTERS.map((f) => (
             <a
               key={f.key}
               href={f.href}
               onClick={go(f.href)}
               className={clsx(
-                "relative text-[10.5px] uppercase tracking-[0.14em] transition-colors",
+                "relative text-[10.5px] uppercase tracking-[0.16em] transition-colors",
                 active === f.key ? "text-ink" : "text-muted",
               )}
             >

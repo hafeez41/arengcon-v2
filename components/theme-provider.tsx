@@ -32,13 +32,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("light");
 
   useEffect(() => {
-    const saved = (localStorage.getItem(STORAGE_KEY) as Theme | null) ?? null;
-    const initial: Theme =
-      saved ??
-      (window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light");
-    setThemeState(initial);
+    const saved = localStorage.getItem(STORAGE_KEY) as Theme | null;
+    // Only adopt explicit prior choice; do NOT inherit OS dark preference.
+    if (saved === "dark") setThemeState("dark");
   }, []);
 
   useEffect(() => {
@@ -47,7 +43,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     else root.classList.remove("dark");
     localStorage.setItem(STORAGE_KEY, theme);
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", theme === "dark" ? "#0a0a0a" : "#ffffff");
+    if (meta) meta.setAttribute("content", theme === "dark" ? "#0e0e0e" : "#fafaf7");
   }, [theme]);
 
   const setTheme = useCallback((t: Theme) => setThemeState(t), []);

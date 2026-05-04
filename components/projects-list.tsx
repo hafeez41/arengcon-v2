@@ -30,7 +30,7 @@ export function ProjectsList({ filter }: { filter: FilterKey }) {
 
   return (
     <LayoutGroup id="projects-list">
-      <ul className="flex flex-col gap-y-16 md:gap-y-24">
+      <ul className="flex flex-col gap-y-20 md:gap-y-32">
         <AnimatePresence mode="popLayout" initial={false}>
           {filtered.map((p) => (
             <motion.li
@@ -79,7 +79,7 @@ function ProjectRow({
   useEffect(() => {
     if (!expanded || !ref.current) return;
     const top = ref.current.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({ top: Math.max(0, top - 90), behavior: "smooth" });
+    window.scrollTo({ top: Math.max(0, top - 100), behavior: "smooth" });
   }, [expanded]);
 
   return (
@@ -87,9 +87,9 @@ function ProjectRow({
       ref={ref}
       layout
       transition={{ layout: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } }}
-      className="mx-auto w-full max-w-[1800px] px-5 md:px-8"
+      className="mx-auto w-full max-w-[1280px] px-5 md:px-8"
     >
-      <div className="grid grid-cols-12 gap-x-4 gap-y-6 md:gap-x-6">
+      <div className="grid grid-cols-12 gap-x-4 gap-y-6 md:gap-x-8">
         {/* Title + meta column */}
         <motion.div
           layout
@@ -98,20 +98,20 @@ function ProjectRow({
             "col-span-12 row-start-2 md:row-start-1",
             expanded
               ? "md:col-span-3 md:col-start-1"
-              : "md:col-span-3 md:col-start-3",
+              : "md:col-span-3 md:col-start-2",
           )}
         >
           <button
             type="button"
             onClick={onToggle}
-            className="block text-left"
+            className="block w-full text-left"
             aria-expanded={expanded}
           >
             <Pictogram project={project} />
-            <h3 className="mt-4 text-[17px] tracking-tight md:text-[18px]">
+            <h3 className="mt-5 text-[18px] leading-[1.25] tracking-tight md:text-[19px]">
               {project.title}
             </h3>
-            <div className="mt-1.5 text-[11px] uppercase tracking-[0.14em] text-muted">
+            <div className="mt-2 text-[10.5px] uppercase tracking-[0.14em] text-muted">
               {project.location}
             </div>
           </button>
@@ -127,13 +127,13 @@ function ProjectRow({
                   delay: 0.18,
                   ease: [0.16, 1, 0.3, 1],
                 }}
-                className="mt-10 space-y-5"
+                className="mt-12 space-y-6"
               >
                 <Meta label="Client" value={project.client} />
                 <Meta label="Typology" value={cat.name} />
                 <Meta label="Size m²/ft²" value={project.size} />
                 <Meta label="Status" value={project.status} />
-                <div className="pt-3">
+                <div className="pt-4">
                   <div className="text-[10px] uppercase tracking-[0.14em] text-muted">
                     Share
                   </div>
@@ -154,7 +154,7 @@ function ProjectRow({
             "group col-span-12 row-start-1 block",
             expanded
               ? "md:col-span-6 md:col-start-4"
-              : "md:col-span-7 md:col-start-6",
+              : "md:col-span-7 md:col-start-5",
           )}
           aria-label={`${expanded ? "Collapse" : "Expand"} ${project.title}`}
         >
@@ -164,7 +164,7 @@ function ProjectRow({
               alt={project.title}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover transition-transform duration-[1.2s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.02]"
+              className="object-cover transition-transform duration-[1.4s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.025]"
               priority={false}
             />
           </div>
@@ -211,7 +211,7 @@ function ProjectRow({
               delay: 0.25,
               ease: [0.16, 1, 0.3, 1],
             }}
-            className="mt-12 md:mt-16"
+            className="mt-16 md:mt-20"
           >
             <ExtendedGallery
               gallery={gallery.slice(1)}
@@ -225,15 +225,41 @@ function ProjectRow({
 }
 
 function Pictogram({ project }: { project: Project }) {
-  const glyph: Record<Category, string> = {
-    arch: "▲",
-    int: "◐",
-    cons: "▮",
-  };
   return (
-    <div className="grid h-9 w-9 place-items-center bg-ink text-paper text-[13px] leading-none">
-      {glyph[project.category]}
+    <div className="grid h-9 w-9 place-items-center bg-ink text-paper">
+      <CategoryGlyph category={project.category} />
     </div>
+  );
+}
+
+function CategoryGlyph({ category }: { category: Category }) {
+  // Abstract architectural marks per discipline
+  if (category === "arch") {
+    return (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="square" strokeLinejoin="miter">
+        <path d="M3 19h18" />
+        <path d="M5 19V9l7-5 7 5v10" />
+        <path d="M10 19v-6h4v6" />
+      </svg>
+    );
+  }
+  if (category === "int") {
+    return (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="square">
+        <rect x="4" y="4" width="16" height="16" />
+        <path d="M4 14h7" />
+        <path d="M11 14v6" />
+        <path d="M16 4v6" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="square" strokeLinejoin="miter">
+      <path d="M3 17h18" />
+      <path d="M3 17l4-7h10l4 7" />
+      <path d="M9 17v-3" />
+      <path d="M15 17v-3" />
+    </svg>
   );
 }
 
@@ -243,7 +269,7 @@ function Meta({ label, value }: { label: string; value: string }) {
       <dt className="text-[10px] uppercase tracking-[0.14em] text-muted">
         {label}
       </dt>
-      <dd className="mt-1 text-[12.5px] uppercase tracking-tight">{value}</dd>
+      <dd className="mt-1.5 text-[12.5px] uppercase tracking-tight">{value}</dd>
     </div>
   );
 }
@@ -251,27 +277,29 @@ function Meta({ label, value }: { label: string; value: string }) {
 function ShareRow({ title }: { title: string }) {
   const url = `mailto:?subject=${encodeURIComponent(title)}`;
   return (
-    <div className="mt-3 flex items-center gap-2.5 text-muted">
+    <div className="mt-3 flex items-center gap-2">
       <a
         href={url}
         aria-label="Email"
-        className="grid h-7 w-7 place-items-center bg-ink/[0.04] transition-colors hover:bg-ink/10 hover:text-ink"
+        className="grid h-7 w-7 place-items-center bg-ink/[0.06] text-muted transition-colors hover:bg-ink hover:text-paper"
       >
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
           <rect x="3" y="5" width="18" height="14" rx="1" />
           <path d="m4 6 8 7 8-7" />
         </svg>
       </a>
-      {["LinkedIn", "X", "Facebook"].map((label, i) => (
+      {[
+        { label: "Facebook", glyph: "f" },
+        { label: "LinkedIn", glyph: "in" },
+        { label: "X", glyph: "X" },
+      ].map(({ label, glyph }) => (
         <button
           key={label}
           aria-label={label}
-          className="grid h-7 w-7 place-items-center bg-ink/[0.04] transition-colors hover:bg-ink/10 hover:text-ink"
+          className="grid h-7 w-7 place-items-center bg-ink/[0.06] text-[10.5px] tracking-tight text-muted transition-colors hover:bg-ink hover:text-paper"
           onClick={(e) => e.stopPropagation()}
         >
-          <span className="text-[10px] tracking-tight">
-            {["in", "X", "f"][i]}
-          </span>
+          {glyph}
         </button>
       ))}
     </div>
@@ -294,8 +322,8 @@ function ExtendedGallery({
   };
 
   return (
-    <div className="relative">
-      <div className="mb-4 flex items-end justify-between gap-3 px-0">
+    <div>
+      <div className="mb-4 flex items-end justify-between gap-3">
         <div className="text-[10px] uppercase tracking-[0.18em] text-muted">
           More — scroll →
         </div>
@@ -336,7 +364,7 @@ function ExtendedGallery({
         {gallery.map((src, i) => (
           <figure
             key={`${i}-${src.slice(0, 32)}`}
-            className="relative aspect-[4/3] w-[78vw] max-w-[760px] shrink-0 snap-start overflow-hidden bg-ink/[0.04] md:w-[58vw]"
+            className="relative aspect-[4/3] w-[78vw] max-w-[820px] shrink-0 snap-start overflow-hidden bg-ink/[0.04] md:w-[58vw]"
           >
             <SmartImage
               src={src}
@@ -348,7 +376,7 @@ function ExtendedGallery({
           </figure>
         ))}
 
-        <aside className="flex w-[78vw] max-w-[760px] shrink-0 snap-start items-center justify-center bg-ink p-10 text-paper md:w-[58vw] md:p-16">
+        <aside className="flex w-[78vw] max-w-[820px] shrink-0 snap-start items-center justify-center bg-ink p-10 text-paper md:w-[58vw] md:p-16">
           <blockquote className="max-w-[36ch]">
             <p className="text-[22px] leading-[1.25] tracking-tight md:text-[28px]">
               “The drawings matched the steel. We came in with a brief and
