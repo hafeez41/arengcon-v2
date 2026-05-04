@@ -1,226 +1,284 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
-import { Logo } from "./logo";
 import { AnimatePresence, motion } from "framer-motion";
-import { SearchOverlay } from "./search-overlay";
+import { Logo } from "./logo";
 import { useTheme } from "./theme-provider";
 import { useNavigate } from "./spa-router";
-import { useModal } from "./modal-context";
+import { SearchOverlay } from "./search-overlay";
 
-type NavKey = "arch" | "int" | "cons" | "updates";
+type NavGroup = {
+  key: string;
+  label: string;
+  href: string;
+  children?: { label: string; href: string }[];
+};
 
-const NAV: { key: NavKey; label: string }[] = [
-  { key: "arch", label: "Architecture" },
-  { key: "int", label: "Interior Design" },
-  { key: "cons", label: "Construction" },
-  { key: "updates", label: "Updates" },
+const NAV: NavGroup[] = [
+  {
+    key: "projects",
+    label: "Projects",
+    href: "/projects",
+    children: [
+      { label: "Architecture", href: "/projects/architecture" },
+      { label: "Interiors", href: "/projects/interiors" },
+      { label: "Construction", href: "/projects/construction" },
+      { label: "Landscape", href: "/projects/landscape" },
+      { label: "Planning", href: "/projects/planning" },
+      { label: "Products", href: "/projects/products" },
+    ],
+  },
+  { key: "news", label: "News", href: "/news" },
+  { key: "about", label: "About", href: "/about" },
+  { key: "sustainability", label: "Sustainability", href: "/sustainability" },
+  { key: "people", label: "People", href: "/people" },
+  { key: "careers", label: "Careers", href: "/careers" },
+  { key: "contact", label: "Contact", href: "/contact" },
+];
+
+const ARCHITECTURE_TOPICS = [
+  "Civic",
+  "Cultural",
+  "Education",
+  "Hospitality",
+  "Residential",
+  "Workplace",
+  "Infrastructure",
+  "Adaptive Reuse",
 ];
 
 export function Header() {
-  const [scrolled, setScrolled] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [hovered, setHovered] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const { theme, toggle } = useTheme();
   const navigate = useNavigate();
-  const { openCategory, openUpdates } = useModal();
-
-  const openNav = (key: NavKey) => {
-    if (key === "updates") openUpdates();
-    else openCategory(key);
-  };
+  const closeTimer = useRef<number | null>(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useEffect(() => {
-    document.body.style.overflow = open || searchOpen ? "hidden" : "";
+    document.body.style.overflow = mobileOpen || searchOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [open, searchOpen]);
+  }, [mobileOpen, searchOpen]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.key === "k" && (e.metaKey || e.ctrlKey)) || e.key === "/") {
-        const target = e.target as HTMLElement;
-        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
+        const target = e.target as HTMLElement | null;
+        if (target?.tagName === "INPUT" || target?.tagName === "TEXTAREA") return;
         e.preventDefault();
         setSearchOpen(true);
       }
       if (e.key === "Escape") {
         setSearchOpen(false);
-        setOpen(false);
+        setMobileOpen(false);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  const handleEnter = (key: string) => {
+    if (closeTimer.current) {
+      window.clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+    setHovered(key);
+  };
+
+  const handleLeave = () => {
+    if (closeTimer.current) window.clearTimeout(closeTimer.current);
+    closeTimer.current = window.setTimeout(() => setHovered(null), 140);
+  };
+
   const go = (href: string) => (e: React.MouseEvent) => {
     e.preventDefault();
-    setOpen(false);
+    setMobileOpen(false);
+    setHovered(null);
     navigate(href);
   };
+
+  const projectsItem = NAV.find((n) => n.key === "projects")!;
+  const showMega = hovered === "projects";
 
   return (
     <>
       <header
-        className={clsx(
-          "fixed inset-x-0 top-0 z-50 transition-[background,border-color] duration-300",
-          scrolled
-            ? "bg-paper border-b border-line"
-            : "bg-paper/0 border-b border-transparent",
-        )}
+        className="sticky top-0 z-40 border-b border-line bg-paper/90 backdrop-blur-md"
+        onMouseLeave={handleLeave}
       >
-        <div className="mx-auto flex w-full max-w-[1800px] items-center justify-between px-4 py-3 md:px-8 md:py-3.5">
+        <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-6 px-5 py-4 md:px-8 md:py-5">
           <a
             href="/"
             onClick={go("/")}
-            className="flex items-center gap-2.5 md:gap-3"
-            aria-label="Arengcon home"
-            data-cursor="hover"
+            className="flex items-center gap-3 text-[15px] font-medium tracking-tight"
           >
-            <Logo className="h-7 w-7 md:h-9 md:w-9" priority />
-            <span className="font-bank whitespace-nowrap text-[13px] font-medium tracking-[0.16em] uppercase md:text-[15px]">
-              Arengcon
-            </span>
+            <Logo className="h-6 w-6" priority />
+            <span>Arengcon</span>
           </a>
 
-          <nav className="hidden items-center gap-7 md:flex lg:gap-9">
+          <nav className="hidden items-center gap-7 md:flex">
             {NAV.map((item) => (
-              <button
+              <div
                 key={item.key}
-                type="button"
-                onClick={() => openNav(item.key)}
-                className="hover-line whitespace-nowrap text-[10.5px] font-medium uppercase tracking-[0.14em]"
-                data-cursor="hover"
+                className="relative"
+                onMouseEnter={() => handleEnter(item.key)}
               >
-                {item.label}
-              </button>
+                <a
+                  href={item.href}
+                  onClick={go(item.href)}
+                  className="editorial-link text-[14px] tracking-tight"
+                >
+                  {item.label}
+                </a>
+              </div>
             ))}
           </nav>
 
-          <div className="flex items-center gap-4 md:gap-5">
-            <button
-              onClick={toggle}
-              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              className="grid h-8 w-8 place-items-center rounded-full transition-colors hover:bg-ink/5"
-              data-cursor="hover"
-            >
-              <ThemeIcon dark={theme === "dark"} />
-            </button>
+          <div className="flex items-center gap-4">
             <button
               onClick={() => setSearchOpen(true)}
               aria-label="Search"
-              className="hover-line whitespace-nowrap text-[10.5px] font-medium uppercase tracking-[0.14em]"
-              data-cursor="hover"
+              className="hidden text-[13px] tracking-tight text-muted transition-colors hover:text-ink md:inline"
             >
               Search
             </button>
             <button
-              onClick={() => setOpen(true)}
+              onClick={toggle}
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              className="grid h-8 w-8 place-items-center rounded-full transition-colors hover:bg-ink/5"
+            >
+              <ThemeIcon dark={theme === "dark"} />
+            </button>
+            <button
+              onClick={() => setMobileOpen(true)}
               aria-label="Open menu"
-              className="md:hidden whitespace-nowrap text-[10.5px] font-medium uppercase tracking-[0.14em]"
-              data-cursor="hover"
+              className="text-[13px] tracking-tight md:hidden"
             >
               Menu
             </button>
           </div>
         </div>
+
+        <AnimatePresence>
+          {showMega && projectsItem.children && (
+            <motion.div
+              key="mega"
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              onMouseEnter={() => handleEnter("projects")}
+              onMouseLeave={handleLeave}
+              className="absolute inset-x-0 top-full border-b border-line bg-paper"
+            >
+              <div className="mx-auto grid w-full max-w-[1600px] grid-cols-12 gap-x-6 gap-y-8 px-5 py-10 md:px-8 md:py-12">
+                <div className="col-span-12 md:col-span-3">
+                  <div className="eyebrow">Browse</div>
+                  <ul className="mt-3 space-y-1.5">
+                    {projectsItem.children.map((c) => (
+                      <li key={c.href}>
+                        <a
+                          href={c.href}
+                          onClick={go(c.href)}
+                          className="editorial-link text-[15px] tracking-tight"
+                        >
+                          {c.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="col-span-12 md:col-span-3">
+                  <div className="eyebrow">Architecture</div>
+                  <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 md:grid-cols-1">
+                    {ARCHITECTURE_TOPICS.map((t) => (
+                      <li key={t}>
+                        <a
+                          href={`/projects/architecture/${t.toLowerCase().replace(/\s+/g, "-")}`}
+                          onClick={go(`/projects/architecture/${t.toLowerCase().replace(/\s+/g, "-")}`)}
+                          className="editorial-link text-[13px] text-muted transition-colors hover:text-ink"
+                        >
+                          {t}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="col-span-12 md:col-span-6">
+                  <div className="eyebrow">Featured</div>
+                  <p className="mt-3 max-w-prose text-[15px] leading-[1.55] tracking-tight">
+                    Selected work across civic, cultural, and infrastructural
+                    scales — from a single-span pedestrian bridge to a
+                    six-line transit interchange.
+                  </p>
+                  <a
+                    href="/projects"
+                    onClick={go("/projects")}
+                    className="editorial-link mt-4 inline-block text-[13px]"
+                  >
+                    View all projects →
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
 
       <AnimatePresence>
-        {open && (
+        {mobileOpen && (
           <motion.div
-            initial={{ y: "-100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "-100%" }}
-            transition={{ duration: 0.7, ease: [0.83, 0, 0.17, 1] }}
-            className="fixed inset-0 z-[80] bg-ink text-paper"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.32 }}
+            className="fixed inset-0 z-[80] bg-paper text-ink md:hidden"
           >
-            <div className="flex h-full flex-col">
-              <div className="flex items-center justify-between px-4 py-3 md:px-8 md:py-3.5">
-                <a
-                  href="/"
-                  onClick={go("/")}
-                  className="flex items-center gap-2.5 md:gap-3"
-                  data-cursor="hover"
-                >
-                  <Logo className="h-7 w-7 md:h-9 md:w-9" invert />
-                  <span className="font-bank text-[13px] font-medium tracking-wider2 uppercase md:text-[15px]">
-                    Arengcon
-                  </span>
-                </a>
-                <button
-                  onClick={() => setOpen(false)}
-                  aria-label="Close menu"
-                  className="text-[11px] font-medium uppercase tracking-wider2"
-                  data-cursor="hover"
-                >
-                  Close
-                </button>
-              </div>
-              <nav className="flex flex-1 flex-col items-start justify-center gap-3 px-5 md:px-10">
+            <div className="flex items-center justify-between border-b border-line px-5 py-4">
+              <a
+                href="/"
+                onClick={go("/")}
+                className="flex items-center gap-3 text-[15px] font-medium tracking-tight"
+              >
+                <Logo className="h-6 w-6" />
+                <span>Arengcon</span>
+              </a>
+              <button
+                onClick={() => setMobileOpen(false)}
+                aria-label="Close menu"
+                className="text-[13px] tracking-tight"
+              >
+                Close
+              </button>
+            </div>
+            <nav className="px-5 py-8">
+              <ul className="space-y-4">
                 {NAV.map((item, i) => (
-                  <motion.div
+                  <motion.li
                     key={item.key}
-                    initial={{ y: 60, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{
-                      delay: 0.18 + i * 0.07,
-                      duration: 0.7,
-                      ease: [0.16, 1, 0.3, 1],
-                    }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.06 * i, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                   >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOpen(false);
-                        openNav(item.key);
-                      }}
-                      className="font-bank text-5xl font-medium uppercase tracking-tight"
-                      data-cursor="hover"
+                    <a
+                      href={item.href}
+                      onClick={go(item.href)}
+                      className={clsx(
+                        "block tracking-tight",
+                        "text-[28px] leading-[1.1]",
+                      )}
                     >
                       {item.label}
-                    </button>
-                  </motion.div>
+                    </a>
+                  </motion.li>
                 ))}
-                <motion.div
-                  initial={{ y: 60, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.5, duration: 0.7 }}
-                  className="mt-8 flex flex-col gap-3 text-[11px] uppercase tracking-wider2 text-paper/60"
-                >
-                  <a
-                    href="/about"
-                    onClick={go("/about")}
-                    className="hover-line"
-                    data-cursor="hover"
-                  >
-                    About
-                  </a>
-                  <a
-                    href="/contact"
-                    onClick={go("/contact")}
-                    className="hover-line"
-                    data-cursor="hover"
-                  >
-                    Contact
-                  </a>
-                </motion.div>
-              </nav>
-              <div className="px-5 pb-6 pt-4 text-[10px] uppercase tracking-wider2 text-paper/50 md:px-10">
-                © 2013 Arengcon
-              </div>
-            </div>
+              </ul>
+            </nav>
           </motion.div>
         )}
       </AnimatePresence>
@@ -231,8 +289,8 @@ export function Header() {
 function ThemeIcon({ dark }: { dark: boolean }) {
   return (
     <svg
-      width="16"
-      height="16"
+      width="14"
+      height="14"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

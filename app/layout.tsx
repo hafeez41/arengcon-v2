@@ -1,6 +1,13 @@
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 const bank = localFont({
   src: [
@@ -18,10 +25,12 @@ export const metadata: Metadata = {
     default: "Arengcon",
     template: "%s — Arengcon",
   },
-  description: "Architecture, interior design, and construction.",
+  description:
+    "An architecture, interior design, and construction practice working across civic, infrastructural, and residential scales.",
   openGraph: {
     title: "Arengcon",
-    description: "Architecture, interior design, and construction.",
+    description:
+      "An architecture, interior design, and construction practice.",
     url: "https://arengcon.com",
     siteName: "Arengcon",
     type: "website",
@@ -33,7 +42,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  themeColor: "#fafaf7",
   width: "device-width",
   initialScale: 1,
 };
@@ -44,7 +53,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={bank.variable}>
+    <html lang="en" className={`${inter.variable} ${bank.variable}`}>
       <body className="font-sans antialiased">{children}</body>
     </html>
   );

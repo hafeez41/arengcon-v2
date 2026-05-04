@@ -7,7 +7,6 @@ import { UpdatesSection } from "./updates-section";
 import { ContactSection } from "./contact-section";
 import { SettingsSection } from "./settings-section";
 import { LoginScreen } from "./login-screen";
-import { Cursor } from "../cursor";
 import { ThemeProvider, useTheme } from "../theme-provider";
 import { useAdminData } from "@/lib/admin-store";
 import { isAuthed, setAuthed } from "@/lib/auth-store";
@@ -43,7 +42,6 @@ function AdminInner() {
   if (!authReady) {
     return (
       <>
-        <Cursor />
         <div className="flex min-h-screen items-center justify-center bg-paper text-[10px] uppercase tracking-[0.18em] text-ink/45">
           Loading…
         </div>
@@ -54,7 +52,6 @@ function AdminInner() {
   if (!signedIn) {
     return (
       <>
-        <Cursor />
         <LoginScreen onSuccess={() => setSignedIn(true)} />
       </>
     );
