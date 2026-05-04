@@ -8,13 +8,6 @@ import { SOCIAL_PLATFORMS, type SocialKey } from "@/lib/admin-store";
 
 const FLOAT = { duration: 0.85, ease: [0.22, 1, 0.36, 1] as const };
 
-const LEGAL = [
-  { label: "Privacy", href: "#" },
-  { label: "Terms", href: "#" },
-  { label: "Anti-Slavery Statement", href: "#" },
-  { label: "Whistleblower Policy", href: "#" },
-];
-
 export function SiteFooter() {
   const { contact } = useEffectiveContact();
   const activeSocial = SOCIAL_PLATFORMS.filter(
@@ -23,9 +16,9 @@ export function SiteFooter() {
 
   return (
     <footer className="border-t border-line">
-      <div className="mx-auto w-full max-w-[1280px] px-5 py-12 md:px-8 md:py-16">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-2 md:grid-cols-4 md:gap-x-10 md:gap-y-4">
-          <Section label="Email">
+      <div className="mx-auto w-full max-w-[1100px] px-5 py-12 md:px-8 md:py-16">
+        <div className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-3 sm:gap-x-10 sm:gap-y-4">
+          <Section label="Contact">
             <ul className="space-y-1.5">
               {contact.emails.map((e) => (
                 <li key={e}>
@@ -98,25 +91,11 @@ export function SiteFooter() {
             )}
           </Section>
 
-          <Section label="Legal">
-            <ul className="space-y-1.5">
-              {LEGAL.map((l) => (
-                <li key={l.label}>
-                  <a
-                    href={l.href}
-                    className="text-[12.5px] tracking-tight text-ink hover:underline"
-                  >
-                    {l.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </Section>
         </div>
 
         <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-line pt-6 text-[10.5px] uppercase tracking-[0.14em] text-muted md:mt-16 md:flex-row md:items-center md:pt-8">
           <div>© {new Date().getFullYear()} Arengcon</div>
-          <div className="tracking-[0.14em]">An Abuja studio · Established 2008</div>
+          <div className="tracking-[0.14em]">An Abuja studio · Established 2013</div>
         </div>
       </div>
     </footer>
