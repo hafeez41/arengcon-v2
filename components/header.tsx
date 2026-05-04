@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { motion } from "framer-motion";
+import { Logo } from "./logo";
 import { useTheme } from "./theme-provider";
 import { useNavigate, useRouterPath } from "./spa-router";
 import { SearchOverlay } from "./search-overlay";
@@ -57,9 +58,12 @@ export function Header() {
             href="/"
             onClick={go("/")}
             aria-label="Arengcon home"
-            className="grid h-7 place-items-center bg-ink px-2.5 text-[12px] font-bold tracking-[0.06em] text-paper md:h-8 md:text-[13px]"
+            className="flex items-center gap-2.5"
           >
-            ARNG
+            <Logo className="h-7 w-7 md:h-8 md:w-8" priority />
+            <span className="text-[15px] font-medium tracking-tight md:text-[16px]">
+              Arengcon
+            </span>
           </a>
 
           <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-12 md:flex lg:gap-20">

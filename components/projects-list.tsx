@@ -80,9 +80,8 @@ function ProjectRow({
 
   return (
     <div ref={ref} className="mx-auto w-full max-w-[1100px] px-5 md:px-8">
-      {/* Fixed-position grid: title (cols 2-4), image (cols 5-9), description (cols 10-12) */}
-      <div className="grid grid-cols-12 gap-x-6 gap-y-8 md:gap-x-8">
-        {/* Title + meta column */}
+      <div className="grid grid-cols-12 items-start gap-x-6 gap-y-8 md:gap-x-8">
+        {/* Title column - always rendered, metadata height-animated below */}
         <div className="col-span-12 row-start-2 md:col-span-3 md:col-start-2 md:row-start-1">
           <button
             type="button"
@@ -99,31 +98,31 @@ function ProjectRow({
             </div>
           </button>
 
-          <AnimatePresence initial={false}>
-            {expanded && (
-              <motion.dl
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 6 }}
-                transition={{ ...SMOOTH, delay: 0.12 }}
-                className="mt-10 space-y-5"
-              >
-                <Meta label="Client" value={project.client} />
-                <Meta label="Typology" value={cat.name} />
-                <Meta label="Size m²/ft²" value={project.size} />
-                <Meta label="Status" value={project.status} />
-                <div className="pt-3">
-                  <div className="text-[10px] uppercase tracking-[0.14em] text-muted">
-                    Share
-                  </div>
-                  <ShareRow title={project.title} />
+          <motion.div
+            initial={false}
+            animate={{
+              height: expanded ? "auto" : 0,
+              opacity: expanded ? 1 : 0,
+            }}
+            transition={{ ...SMOOTH, delay: expanded ? 0.05 : 0 }}
+            style={{ overflow: "hidden" }}
+          >
+            <dl className="mt-10 space-y-5">
+              <Meta label="Client" value={project.client} />
+              <Meta label="Typology" value={cat.name} />
+              <Meta label="Size m²/ft²" value={project.size} />
+              <Meta label="Status" value={project.status} />
+              <div className="pt-3">
+                <div className="text-[10px] uppercase tracking-[0.14em] text-muted">
+                  Share
                 </div>
-              </motion.dl>
-            )}
-          </AnimatePresence>
+                <ShareRow title={project.title} />
+              </div>
+            </dl>
+          </motion.div>
         </div>
 
-        {/* Image column - never moves */}
+        {/* Image column */}
         <button
           type="button"
           onClick={onToggle}
@@ -141,52 +140,46 @@ function ProjectRow({
           </div>
         </button>
 
-        {/* Description column - fades in on right (cols 10-12) */}
-        <AnimatePresence initial={false}>
-          {expanded && (
-            <motion.div
-              key="desc"
-              initial={{ opacity: 0, x: 12 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 12 }}
-              transition={{ ...SMOOTH, delay: 0.15 }}
-              className={clsx(
-                "col-span-12 row-start-3 md:col-span-3 md:col-start-10 md:row-start-1",
-              )}
-            >
-              <p className="text-[13.5px] leading-[1.65]">
-                {project.summary}
-              </p>
-              <div className="mt-5 space-y-3 text-[13px] leading-[1.65] text-ink/85">
-                {project.description.map((para, i) => (
-                  <p key={i}>{para}</p>
-                ))}
-              </div>
-            </motion.div>
+        {/* Description column - always in grid, fades by opacity (no DOM mount/unmount) */}
+        <motion.div
+          initial={false}
+          animate={{ opacity: expanded ? 1 : 0 }}
+          transition={{ ...SMOOTH, delay: expanded ? 0.18 : 0 }}
+          aria-hidden={!expanded}
+          className={clsx(
+            "col-span-12 row-start-3 md:col-span-3 md:col-start-10 md:row-start-1",
+            !expanded && "pointer-events-none select-none",
           )}
-        </AnimatePresence>
+        >
+          <p className="text-[13.5px] leading-[1.65]">{project.summary}</p>
+          <div className="mt-5 space-y-3 text-[13px] leading-[1.65] text-ink/85">
+            {project.description.map((para, i) => (
+              <p key={i}>{para}</p>
+            ))}
+          </div>
+        </motion.div>
       </div>
 
-      {/* Extended horizontal gallery */}
-      <AnimatePresence initial={false}>
-        {expanded && gallery.length > 1 && (
-          <motion.div
-            key="extended"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={SMOOTH}
-            style={{ overflow: "hidden" }}
-          >
-            <div className="mt-12 md:mt-16">
-              <ExtendedGallery
-                gallery={gallery.slice(1)}
-                project={project}
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Extended horizontal gallery — height animates 0 ↔ auto */}
+      {gallery.length > 1 && (
+        <motion.div
+          initial={false}
+          animate={{
+            height: expanded ? "auto" : 0,
+            opacity: expanded ? 1 : 0,
+          }}
+          transition={{ ...SMOOTH, delay: expanded ? 0.22 : 0 }}
+          aria-hidden={!expanded}
+          style={{ overflow: "hidden" }}
+        >
+          <div className="mt-12 md:mt-16">
+            <ExtendedGallery
+              gallery={gallery.slice(1)}
+              project={project}
+            />
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }
@@ -201,30 +194,43 @@ function Pictogram({ project }: { project: Project }) {
 
 function CategoryGlyph({ category }: { category: Category }) {
   if (category === "arch") {
+    // Building elevation — pitched roof, two windows, door
     return (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="square">
-        <path d="M3 19h18" />
-        <path d="M5 19V9l7-5 7 5v10" />
-        <path d="M10 19v-6h4v6" />
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" strokeLinejoin="miter">
+        <path d="M4 11l8-6 8 6" />
+        <path d="M5 11v9h14v-9" />
+        <path d="M10 20v-5h4v5" />
+        <rect x="7" y="13" width="2.5" height="2.5" />
+        <rect x="14.5" y="13" width="2.5" height="2.5" />
       </svg>
     );
   }
   if (category === "int") {
+    // Floor plan — partitioned rooms with door swing
     return (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="square">
-        <rect x="4" y="4" width="16" height="16" />
-        <path d="M4 14h7" />
-        <path d="M11 14v6" />
-        <path d="M16 4v6" />
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" strokeLinejoin="miter">
+        <rect x="3" y="4" width="18" height="16" />
+        <path d="M3 13h10" />
+        <path d="M13 4v9" />
+        <path d="M13 13v7" />
+        <path d="M16 20v-3" />
+        <path d="M16 17a3 3 0 0 0 3-3" />
       </svg>
     );
   }
+  // Construction — truss bridge profile with deck
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="square">
-      <path d="M3 17h18" />
-      <path d="M3 17l4-7h10l4 7" />
-      <path d="M9 17v-3" />
-      <path d="M15 17v-3" />
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" strokeLinejoin="miter">
+      <path d="M2 16h20" />
+      <path d="M2 12h20" />
+      <path d="M3 16l4-4" />
+      <path d="M9 16l-2-4" />
+      <path d="M9 16l2-4" />
+      <path d="M15 16l-2-4" />
+      <path d="M15 16l2-4" />
+      <path d="M21 16l-4-4" />
+      <path d="M2 16v3" />
+      <path d="M22 16v3" />
     </svg>
   );
 }
