@@ -1,16 +1,16 @@
 "use client";
 
 import { ProjectsList, type FilterKey } from "./projects-list";
+import { NewsList } from "./news-list";
 import { FILTER_FROM_PATH } from "./header";
 
 export function HomeView({ filter = "all" }: { filter?: FilterKey } = {}) {
   return (
     <>
-      {/* Header sits fixed; spacer keeps content below it */}
       <div className="h-[72px] md:h-[88px]" aria-hidden />
       <section className="pb-32 md:pb-40">
         <div className="pt-12 md:pt-16">
-          <ProjectsList filter={filter} />
+          {filter === "news" ? <NewsList /> : <ProjectsList filter={filter} />}
         </div>
       </section>
     </>

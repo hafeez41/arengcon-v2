@@ -9,19 +9,29 @@ import { useNavigate, useRouterPath } from "./spa-router";
 import { SearchOverlay } from "./search-overlay";
 import type { Category } from "@/lib/projects";
 
-type FilterKey = "all" | Category;
+type FilterKey = "all" | Category | "news";
 
 const FILTERS: { key: FilterKey; label: string; href: string }[] = [
   { key: "arch", label: "Architecture", href: "/architecture" },
   { key: "int", label: "Interiors", href: "/interiors" },
   { key: "cons", label: "Construction", href: "/construction" },
+  { key: "news", label: "News", href: "/news" },
 ];
 
 export function FILTER_FROM_PATH(path: string): FilterKey {
   if (path.startsWith("/architecture")) return "arch";
   if (path.startsWith("/interiors")) return "int";
   if (path.startsWith("/construction")) return "cons";
+  if (path.startsWith("/news")) return "news";
   return "all";
+}
+
+function labelFor(f: FilterKey): string {
+  if (f === "arch") return "Architecture";
+  if (f === "int") return "Interiors";
+  if (f === "cons") return "Construction";
+  if (f === "news") return "News";
+  return "All work";
 }
 
 export function Header() {
@@ -66,7 +76,7 @@ export function Header() {
             </span>
           </a>
 
-          <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-12 md:flex lg:gap-20">
+          <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-9 md:flex lg:gap-14">
             {FILTERS.map((f) => (
               <a
                 key={f.key}
@@ -109,33 +119,11 @@ export function Header() {
               </svg>
             </button>
             <a
-              href={
-                active === "all"
-                  ? "/architecture"
-                  : active === "arch"
-                    ? "/interiors"
-                    : active === "int"
-                      ? "/construction"
-                      : "/architecture"
-              }
-              onClick={go(
-                active === "all"
-                  ? "/architecture"
-                  : active === "arch"
-                    ? "/interiors"
-                    : active === "int"
-                      ? "/construction"
-                      : "/architecture",
-              )}
+              href="/"
+              onClick={go("/")}
               className="hidden text-[10.5px] uppercase tracking-[0.16em] text-muted transition-colors hover:text-ink md:inline"
             >
-              {active === "all"
-                ? "Browse"
-                : active === "arch"
-                  ? "Architecture"
-                  : active === "int"
-                    ? "Interiors"
-                    : "Construction"}
+              {labelFor(active)}
             </a>
             <button
               onClick={toggle}
@@ -147,14 +135,14 @@ export function Header() {
           </div>
         </div>
 
-        <nav className="flex items-center justify-center gap-6 px-5 pb-3 md:hidden">
+        <nav className="flex items-center justify-center gap-5 px-4 pb-3 md:hidden">
           {FILTERS.map((f) => (
             <a
               key={f.key}
               href={f.href}
               onClick={go(f.href)}
               className={clsx(
-                "relative text-[10.5px] uppercase tracking-[0.16em] transition-colors",
+                "relative text-[10px] uppercase tracking-[0.14em] transition-colors",
                 active === f.key ? "text-ink" : "text-muted",
               )}
             >
