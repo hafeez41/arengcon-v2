@@ -133,14 +133,18 @@ function UpdateRow({
           </motion.button>
         )}
 
-        {/* Excerpt + body — opacity-only when has image, height-only when text-only */}
+        {/* Excerpt + body — height collapses when not expanded so the
+            description column doesn't inflate the row height. */}
         {hasImage ? (
           <motion.div
-            layout
             initial={false}
-            animate={{ opacity: expanded ? 1 : 0 }}
-            transition={{ ...FLOAT, layout: FLOAT }}
+            animate={{
+              opacity: expanded ? 1 : 0,
+              height: expanded ? "auto" : 0,
+            }}
+            transition={FLOAT}
             aria-hidden={!expanded}
+            style={{ overflow: "hidden" }}
             className={clsx(
               "col-span-12 row-start-3 md:col-span-3 md:col-start-10 md:row-start-1",
               !expanded && "pointer-events-none select-none",
