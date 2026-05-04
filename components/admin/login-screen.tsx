@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { Logo } from "../logo";
 import { setAuthed, verifyLogin } from "@/lib/auth-store";
 
 export function LoginScreen({ onSuccess }: { onSuccess: () => void }) {
@@ -35,17 +36,20 @@ export function LoginScreen({ onSuccess }: { onSuccess: () => void }) {
       <motion.form
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
         onSubmit={submit}
         className="w-full max-w-sm space-y-7 border border-line bg-paper px-7 py-8 md:px-9 md:py-10"
       >
-        <div>
-          <h1 className="font-bank text-2xl font-medium uppercase tracking-tight">
-            Admin
-          </h1>
-          <p className="mt-1.5 text-[10px] uppercase tracking-[0.18em] text-ink/55">
-            Sign in to continue
-          </p>
+        <div className="flex items-center gap-3">
+          <Logo className="h-9 w-9" priority />
+          <div>
+            <h1 className="font-bank text-[22px] font-medium uppercase leading-none tracking-[0.04em]">
+              Arengcon
+            </h1>
+            <p className="mt-1.5 text-[10px] uppercase tracking-[0.14em] text-muted">
+              Admin · Sign in
+            </p>
+          </div>
         </div>
 
         <div className="space-y-5">
@@ -86,7 +90,7 @@ export function LoginScreen({ onSuccess }: { onSuccess: () => void }) {
 
         <a
           href="/"
-          className="block text-center text-[10px] uppercase tracking-[0.18em] text-ink/45 transition-colors duration-200 hover:text-ink/65"
+          className="block text-center text-[10px] uppercase tracking-[0.14em] text-muted transition-colors duration-200 hover:text-ink"
         >
           ← Back to site
         </a>
@@ -104,7 +108,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-[10px] uppercase tracking-[0.18em] text-ink/55">
+      <label className="block text-[10px] uppercase tracking-[0.14em] text-muted">
         {label}
       </label>
       <div className="mt-1.5">{children}</div>

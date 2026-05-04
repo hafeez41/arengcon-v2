@@ -7,6 +7,7 @@ import { UpdatesSection } from "./updates-section";
 import { ContactSection } from "./contact-section";
 import { SettingsSection } from "./settings-section";
 import { LoginScreen } from "./login-screen";
+import { Logo } from "../logo";
 import { ThemeProvider, useTheme } from "../theme-provider";
 import { useAdminData } from "@/lib/admin-store";
 import { isAuthed, setAuthed } from "@/lib/auth-store";
@@ -41,20 +42,14 @@ function AdminInner() {
 
   if (!authReady) {
     return (
-      <>
-        <div className="flex min-h-screen items-center justify-center bg-paper text-[10px] uppercase tracking-[0.18em] text-ink/45">
-          Loading…
-        </div>
-      </>
+      <div className="flex min-h-screen items-center justify-center bg-paper text-[10px] uppercase tracking-[0.14em] text-muted">
+        Loading…
+      </div>
     );
   }
 
   if (!signedIn) {
-    return (
-      <>
-        <LoginScreen onSuccess={() => setSignedIn(true)} />
-      </>
-    );
+    return <LoginScreen onSuccess={() => setSignedIn(true)} />;
   }
 
   const onSignOut = () => {
@@ -65,11 +60,10 @@ function AdminInner() {
 
   return (
     <div className="min-h-screen bg-paper text-ink transition-colors duration-300">
-      <Cursor />
       <AdminHeader tab={tab} setTab={setTab} onSignOut={onSignOut} />
 
       {!loaded ? (
-        <div className="px-5 py-16 text-center text-[11px] uppercase tracking-[0.18em] text-ink/45 md:px-10">
+        <div className="px-5 py-16 text-center text-[11px] uppercase tracking-[0.14em] text-muted md:px-10">
           Loading…
         </div>
       ) : (
@@ -80,7 +74,7 @@ function AdminInner() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
             >
               {tab === "projects" && <ProjectsSection projects={projects} />}
               {tab === "updates" && <UpdatesSection updates={updates} />}
@@ -92,8 +86,8 @@ function AdminInner() {
       )}
 
       <footer className="border-t border-line">
-        <div className="mx-auto w-full max-w-[1400px] px-5 py-6 text-[10px] uppercase tracking-[0.18em] text-ink/45 md:px-8">
-          Stored locally in this browser · Use the same device for your edits
+        <div className="mx-auto w-full max-w-[1400px] px-5 py-6 text-[10px] uppercase tracking-[0.14em] text-muted md:px-8">
+          Stored locally in this browser · Same device for all edits
         </div>
       </footer>
     </div>
@@ -111,21 +105,21 @@ function AdminHeader({
 }) {
   const { theme, toggle } = useTheme();
   return (
-    <header className="sticky top-0 z-10 border-b border-line bg-paper/85 backdrop-blur transition-colors duration-300">
+    <header className="sticky top-0 z-10 border-b border-line bg-paper/90 backdrop-blur transition-colors duration-300">
       <div className="mx-auto w-full max-w-[1400px] px-4 py-3 md:px-8 md:py-4">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 md:gap-4">
-            <a
-              href="/"
-              className="font-bank text-[13px] font-medium uppercase tracking-[0.18em] transition-opacity duration-200 hover:opacity-70 md:text-[14px]"
-              data-cursor="hover"
-            >
+          <a
+            href="/"
+            className="flex items-center gap-2.5 transition-opacity duration-200 hover:opacity-80 md:gap-3"
+          >
+            <Logo className="h-8 w-8 md:h-10 md:w-10" priority />
+            <span className="font-bank text-[18px] font-medium uppercase leading-none tracking-[0.04em] md:text-[24px]">
               Arengcon
-            </a>
-            <span className="hidden text-[10px] uppercase tracking-[0.18em] text-ink/45 sm:inline">
+            </span>
+            <span className="hidden text-[10px] uppercase tracking-[0.14em] text-muted sm:inline">
               · Admin
             </span>
-          </div>
+          </a>
 
           <nav className="relative hidden items-center gap-1 rounded-full border border-line bg-paper/40 p-1 md:flex md:gap-1.5">
             {TABS.map((t) => (
@@ -133,10 +127,9 @@ function AdminHeader({
                 key={t.key}
                 type="button"
                 onClick={() => setTab(t.key)}
-                data-cursor="hover"
                 className={
                   "relative rounded-full px-3 py-1.5 text-[10.5px] font-medium uppercase tracking-[0.14em] transition-colors duration-200 md:px-4 " +
-                  (tab === t.key ? "text-paper" : "text-ink/55 hover:text-ink")
+                  (tab === t.key ? "text-paper" : "text-muted hover:text-ink")
                 }
               >
                 {tab === t.key && (
@@ -155,19 +148,28 @@ function AdminHeader({
             <button
               type="button"
               onClick={toggle}
-              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              data-cursor="hover"
+              aria-label={
+                theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+              }
               className="grid h-8 w-8 place-items-center rounded-full transition-colors duration-200 hover:bg-ink/5"
             >
               <ThemeIcon dark={theme === "dark"} />
             </button>
             <a
               href="/"
-              data-cursor="hover"
               aria-label="View site"
               className="grid h-8 w-8 place-items-center rounded-full transition-colors duration-200 hover:bg-ink/5 md:hidden"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M14 3h7v7" />
                 <path d="M21 3l-9 9" />
                 <path d="M21 14v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h6" />
@@ -175,19 +177,26 @@ function AdminHeader({
             </a>
             <a
               href="/"
-              data-cursor="hover"
-              className="hidden text-[10.5px] uppercase tracking-[0.14em] text-ink/55 transition-colors duration-200 hover:text-ink md:inline"
+              className="hidden text-[10.5px] uppercase tracking-[0.14em] text-muted transition-colors duration-200 hover:text-ink md:inline"
             >
               View site →
             </a>
             <button
               type="button"
               onClick={onSignOut}
-              data-cursor="hover"
               aria-label="Sign out"
               className="grid h-8 w-8 place-items-center rounded-full transition-colors duration-200 hover:bg-ink/5 md:hidden"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                 <path d="M16 17l5-5-5-5" />
                 <path d="M21 12H9" />
@@ -196,8 +205,7 @@ function AdminHeader({
             <button
               type="button"
               onClick={onSignOut}
-              data-cursor="hover"
-              className="hidden text-[10.5px] uppercase tracking-[0.14em] text-ink/55 transition-colors duration-200 hover:text-ink md:inline"
+              className="hidden text-[10.5px] uppercase tracking-[0.14em] text-muted transition-colors duration-200 hover:text-ink md:inline"
             >
               Sign out
             </button>
@@ -210,10 +218,9 @@ function AdminHeader({
               key={t.key}
               type="button"
               onClick={() => setTab(t.key)}
-              data-cursor="hover"
               className={
-                "relative rounded-full px-1 py-1.5 text-center text-[10px] font-medium uppercase tracking-[0.12em] transition-colors duration-200 " +
-                (tab === t.key ? "text-paper" : "text-ink/55 hover:text-ink")
+                "relative rounded-full px-1 py-1.5 text-center text-[10px] font-medium uppercase tracking-[0.1em] transition-colors duration-200 " +
+                (tab === t.key ? "text-paper" : "text-muted hover:text-ink")
               }
             >
               {tab === t.key && (
@@ -235,8 +242,8 @@ function AdminHeader({
 function ThemeIcon({ dark }: { dark: boolean }) {
   return (
     <svg
-      width="16"
-      height="16"
+      width="14"
+      height="14"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

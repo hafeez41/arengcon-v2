@@ -22,9 +22,9 @@ export const CATEGORY_LABELS: Record<Category, { name: string; tag: string; href
     href: "/architecture",
   },
   int: {
-    name: "Interior Design",
-    tag: "Interior design projects",
-    href: "/interior-design",
+    name: "Interiors",
+    tag: "Interior projects",
+    href: "/interiors",
   },
   cons: {
     name: "Construction",
