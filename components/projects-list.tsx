@@ -161,13 +161,17 @@ function ProjectRow({
           </motion.div>
         </motion.button>
 
-        {/* Description — opacity only, always in grid */}
+        {/* Description — height collapses to 0 when not expanded so longer
+            descriptions don't inflate the row height of the collapsed state. */}
         <motion.div
-          layout
           initial={false}
-          animate={{ opacity: expanded ? 1 : 0 }}
-          transition={{ ...FLOAT, layout: FLOAT }}
+          animate={{
+            opacity: expanded ? 1 : 0,
+            height: expanded ? "auto" : 0,
+          }}
+          transition={FLOAT}
           aria-hidden={!expanded}
+          style={{ overflow: "hidden" }}
           className={clsx(
             "col-span-12 row-start-3 md:col-span-3 md:col-start-10 md:row-start-1",
             !expanded && "pointer-events-none select-none",
