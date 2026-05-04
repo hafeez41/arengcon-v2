@@ -17,8 +17,9 @@ import type { AdminProject } from "@/lib/admin-store";
 
 export type FilterKey = "all" | Category;
 
-const SMOOTH = { duration: 0.6, ease: [0.16, 1, 0.3, 1] as const };
-const SWITCH_DELAY_MS = 520; // close-then-open hand-off
+const SMOOTH = { duration: 0.85, ease: [0.22, 1, 0.36, 1] as const };
+const SOFT_ENTRY = { duration: 1.05, ease: [0.22, 1, 0.36, 1] as const };
+const SWITCH_DELAY_MS = 720;
 
 export function ProjectsList({ filter }: { filter: FilterKey }) {
   const { list, adminProjects } = useEffectiveProjects();
@@ -56,11 +57,11 @@ export function ProjectsList({ filter }: { filter: FilterKey }) {
           <motion.li
             key={p.slug}
             layout="position"
-            initial={{ opacity: 0, y: 28 }}
+            initial={{ opacity: 0, y: 32 }}
             whileInView={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+            exit={{ opacity: 0, y: -16 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={SOFT_ENTRY}
           >
             <ProjectRow
               project={p}
@@ -89,22 +90,6 @@ function ProjectRow({
   const cat = CATEGORY_LABELS[project.category];
   const gallery = projectGallery(project, adminProjects);
   const ref = useRef<HTMLDivElement | null>(null);
-
-  // Smoothly bring the expanded project into the upper part of the viewport.
-  // Fires after a tick so the layout has begun expanding before scrolling.
-  useEffect(() => {
-    if (!expanded || !ref.current) return;
-    const el = ref.current;
-    const id = window.requestAnimationFrame(() => {
-      const top = el.getBoundingClientRect().top + window.scrollY;
-      const target = Math.max(0, top - 110);
-      // Only scroll if we're far from the right spot
-      if (Math.abs(target - window.scrollY) > 4) {
-        window.scrollTo({ top: target, behavior: "smooth" });
-      }
-    });
-    return () => window.cancelAnimationFrame(id);
-  }, [expanded]);
 
   return (
     <div ref={ref} className="mx-auto w-full max-w-[1100px] px-5 md:px-8">
