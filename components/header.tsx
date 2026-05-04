@@ -72,21 +72,21 @@ export function Header() {
             href="/"
             onClick={go("/")}
             aria-label="Arengcon home"
-            className="flex items-center gap-3 md:gap-4"
+            className="flex items-center gap-2.5 md:gap-4"
           >
             {introDone ? (
               <motion.div
                 layoutId="brand-mark"
                 transition={{ layout: MORPH }}
-                className="flex items-center gap-3 md:gap-4"
+                className="flex items-center gap-2.5 md:gap-4"
               >
-                <Logo className="h-12 w-12 md:h-16 md:w-16" priority />
-                <span className="font-bank text-[28px] font-medium uppercase leading-none tracking-[0.04em] md:text-[42px]">
+                <Logo className="h-9 w-9 md:h-16 md:w-16" priority />
+                <span className="font-bank text-[18px] font-medium uppercase leading-none tracking-[0.04em] md:text-[42px]">
                   Arengcon
                 </span>
               </motion.div>
             ) : (
-              <span aria-hidden className="block h-12 w-[180px] md:h-16 md:w-[260px]" />
+              <span aria-hidden className="block h-9 w-[120px] md:h-16 md:w-[260px]" />
             )}
           </a>
 
@@ -149,14 +149,14 @@ export function Header() {
           </div>
         </div>
 
-        <nav className="flex items-center justify-center gap-5 px-4 pb-3 md:hidden">
+        <nav className="flex items-center justify-between gap-2 px-4 pb-3 md:hidden">
           {FILTERS.map((f) => (
             <a
               key={f.key}
               href={f.href}
               onClick={go(f.href)}
               className={clsx(
-                "relative text-[10px] uppercase tracking-[0.14em] transition-colors",
+                "relative whitespace-nowrap text-[9px] uppercase tracking-[0.1em] transition-colors",
                 active === f.key ? "text-ink" : "text-muted",
               )}
             >

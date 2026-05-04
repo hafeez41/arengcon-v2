@@ -7,7 +7,7 @@ import { FILTER_FROM_PATH } from "./header";
 export function HomeView({ filter = "all" }: { filter?: FilterKey } = {}) {
   return (
     <>
-      <div className="h-[120px] md:h-[120px]" aria-hidden />
+      <div className="h-[90px] md:h-[120px]" aria-hidden />
       <section className="pb-32 md:pb-40">
         <div className="pt-12 md:pt-16">
           {filter === "updates" ? (
