@@ -17,7 +17,6 @@ export type AdminProject = {
   description: string;
   hero: string;
   gallery: string[];
-  videoUrl?: string;
   createdAt: number;
 };
 
@@ -29,21 +28,34 @@ export type AdminUpdate = {
   date: string;
   kind: "Studio" | "Press" | "Project" | "Talk";
   hero?: string;
-  videoUrl?: string;
   createdAt: number;
 };
 
-export type AdminContactOffice = {
-  id: string;
-  city: string;
-  address: string;
-  email: string;
-  phone: string;
-};
+export const SOCIAL_PLATFORMS = [
+  { key: "instagram", label: "Instagram" },
+  { key: "x", label: "X" },
+  { key: "linkedin", label: "LinkedIn" },
+  { key: "facebook", label: "Facebook" },
+  { key: "vimeo", label: "Vimeo" },
+  { key: "youtube", label: "YouTube" },
+  { key: "tiktok", label: "TikTok" },
+  { key: "pinterest", label: "Pinterest" },
+] as const;
+
+export type SocialKey = (typeof SOCIAL_PLATFORMS)[number]["key"];
 
 export type AdminContact = {
-  email: string;
-  offices: AdminContactOffice[];
+  emails: string[];
+  phones: string[];
+  office: { location: string; hours: string };
+  social: Partial<Record<SocialKey, string>>;
+};
+
+export const DEFAULT_CONTACT: AdminContact = {
+  emails: ["arengconlimited@gmail.com", "arengconoffice@gmail.com"],
+  phones: ["+234 8066163163"],
+  office: { location: "Abuja, Nigeria", hours: "Mon – Sun, 9am – 6pm" },
+  social: {},
 };
 
 const KEYS = {
@@ -67,16 +79,45 @@ let cache: {
   loaded?: boolean;
 } = {};
 
+function migrateContact(raw: unknown): AdminContact | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  // New shape already
+  if (Array.isArray(r.emails) && Array.isArray(r.phones) && r.office && r.social) {
+    return r as unknown as AdminContact;
+  }
+  // Old shape: { email: string, offices: [{ city, address, email, phone }] }
+  if (typeof r.email === "string" || Array.isArray(r.offices)) {
+    const offices = (r.offices as Array<Record<string, string>> | undefined) ?? [];
+    const emails = [r.email as string, ...offices.map((o) => o?.email)]
+      .filter((e): e is string => !!e && /@/.test(e));
+    const phones = offices
+      .map((o) => o?.phone)
+      .filter((p): p is string => !!p);
+    const first = offices[0];
+    return {
+      emails: emails.length ? Array.from(new Set(emails)) : [],
+      phones: phones.length ? phones : [],
+      office: {
+        location: first?.city ?? "",
+        hours: "",
+      },
+      social: {},
+    };
+  }
+  return null;
+}
+
 async function ensureLoaded() {
   if (cache.loaded) return;
-  const [projects, updates, contact] = await Promise.all([
+  const [projects, updates, contactRaw] = await Promise.all([
     idbGet<AdminProject[]>(KEYS.projects),
     idbGet<AdminUpdate[]>(KEYS.updates),
-    idbGet<AdminContact>(KEYS.contact),
+    idbGet<unknown>(KEYS.contact),
   ]);
   cache.projects = projects ?? [];
   cache.updates = updates ?? [];
-  cache.contact = contact ?? null;
+  cache.contact = migrateContact(contactRaw);
   cache.loaded = true;
 }
 

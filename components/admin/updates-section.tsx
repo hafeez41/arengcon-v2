@@ -25,7 +25,6 @@ function emptyUpdate(): AdminUpdate {
     date: todayISO(),
     kind: "Studio",
     hero: "",
-    videoUrl: "",
     createdAt: Date.now(),
   };
 }
@@ -105,12 +104,6 @@ export function UpdatesSection({ updates }: { updates: AdminUpdate[] }) {
               </div>
               <div className="mt-0.5 flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-ink/55">
                 <span className="tabnum">{u.date}</span>
-                {u.videoUrl && (
-                  <>
-                    <span className="opacity-50">·</span>
-                    <span>Video</span>
-                  </>
-                )}
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -256,15 +249,6 @@ function UpdateEditor({
             value={draft.hero || undefined}
             onChange={(v) => set("hero", v ?? "")}
           />
-
-          <Field label="YouTube video URL (optional)">
-            <input
-              value={draft.videoUrl ?? ""}
-              onChange={(e) => set("videoUrl", e.target.value)}
-              placeholder="https://www.youtube.com/watch?v=…"
-              className="w-full border-b border-line bg-transparent py-2 text-sm outline-none focus:border-ink"
-            />
-          </Field>
         </div>
 
         <div className="mt-8 flex items-center justify-end gap-3 border-t border-line pt-6">

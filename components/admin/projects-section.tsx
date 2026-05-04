@@ -28,7 +28,6 @@ function emptyProject(): AdminProject {
     description: "",
     hero: "",
     gallery: [],
-    videoUrl: "",
     createdAt: Date.now(),
   };
 }
@@ -289,15 +288,6 @@ function ProjectEditor({
             onChange={(v) => set("gallery", v)}
             max={6}
           />
-
-          <Field label="YouTube video URL (optional)">
-            <input
-              value={draft.videoUrl ?? ""}
-              onChange={(e) => set("videoUrl", e.target.value)}
-              placeholder="https://www.youtube.com/watch?v=…"
-              className="w-full border-b border-line bg-transparent py-2 text-sm outline-none focus:border-ink"
-            />
-          </Field>
         </div>
 
         <div className="mt-8 flex items-center justify-end gap-3 border-t border-line pt-6">

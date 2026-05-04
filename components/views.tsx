@@ -2,13 +2,14 @@
 
 import { ProjectsList, type FilterKey } from "./projects-list";
 import { UpdatesList } from "./updates-list";
+import { SiteFooter } from "./site-footer";
 import { FILTER_FROM_PATH } from "./header";
 
 export function HomeView({ filter = "all" }: { filter?: FilterKey } = {}) {
   return (
     <>
       <div className="h-[90px] md:h-[120px]" aria-hidden />
-      <section className="pb-32 md:pb-40">
+      <section className="pb-24 md:pb-32">
         <div className="pt-12 md:pt-16">
           {filter === "updates" ? (
             <UpdatesList />
@@ -17,6 +18,7 @@ export function HomeView({ filter = "all" }: { filter?: FilterKey } = {}) {
           )}
         </div>
       </section>
+      <SiteFooter />
     </>
   );
 }

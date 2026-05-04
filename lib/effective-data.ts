@@ -1,7 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
-import { useAdminData, type AdminProject, type AdminUpdate, type AdminContact } from "./admin-store";
+import {
+  useAdminData,
+  type AdminProject,
+  type AdminUpdate,
+  type AdminContact,
+  DEFAULT_CONTACT,
+} from "./admin-store";
 import { type Project, type Category, projects as placeholderProjects } from "./projects";
 import { type Update, updates as placeholderUpdates } from "./updates";
 
@@ -62,7 +68,21 @@ export function useEffectiveUpdates() {
 
 export function useEffectiveContact() {
   const { contact, loaded } = useAdminData();
-  return { loaded, contact: contact as AdminContact | null };
+  // Always return a usable contact — admin overrides individual fields,
+  // defaults fill in anything left blank.
+  const merged: AdminContact = useMemo(() => {
+    if (!contact) return DEFAULT_CONTACT;
+    return {
+      emails: contact.emails?.length ? contact.emails : DEFAULT_CONTACT.emails,
+      phones: contact.phones?.length ? contact.phones : DEFAULT_CONTACT.phones,
+      office: {
+        location: contact.office?.location || DEFAULT_CONTACT.office.location,
+        hours: contact.office?.hours || DEFAULT_CONTACT.office.hours,
+      },
+      social: contact.social ?? {},
+    };
+  }, [contact]);
+  return { loaded, contact: merged, isCustom: !!contact };
 }
 
 export function projectsByCategoryFiltered(list: Project[], cat: Category): Project[] {
@@ -91,12 +111,3 @@ export function projectGallery(p: Project, adminProjects: AdminProject[]): strin
   ];
 }
 
-export function projectVideo(p: Project, adminProjects: AdminProject[]): string | null {
-  const admin = adminProjects.find((ap) => ap.id === p.slug);
-  return admin?.videoUrl ?? null;
-}
-
-export function updateVideo(u: Update, adminUpdates: AdminUpdate[]): string | null {
-  const admin = adminUpdates.find((au) => au.id === u.slug);
-  return admin?.videoUrl ?? null;
-}
