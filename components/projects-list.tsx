@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { SmartImage } from "./smart-image";
@@ -17,6 +17,8 @@ import type { AdminProject } from "@/lib/admin-store";
 
 export type FilterKey = "all" | Category;
 
+const SMOOTH = { duration: 0.55, ease: [0.16, 1, 0.3, 1] as const };
+
 export function ProjectsList({ filter }: { filter: FilterKey }) {
   const { list, adminProjects } = useEffectiveProjects();
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -29,35 +31,29 @@ export function ProjectsList({ filter }: { filter: FilterKey }) {
     filter === "all" ? list : list.filter((p) => p.category === filter);
 
   return (
-    <LayoutGroup id="projects-list">
-      <ul className="flex flex-col gap-y-20 md:gap-y-32">
-        <AnimatePresence mode="popLayout" initial={false}>
-          {filtered.map((p) => (
-            <motion.li
-              key={p.slug}
-              layout
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{
-                layout: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
-                opacity: { duration: 0.4 },
-                y: { duration: 0.45, ease: [0.16, 1, 0.3, 1] },
-              }}
-            >
-              <ProjectRow
-                project={p}
-                expanded={expanded === p.slug}
-                onToggle={() =>
-                  setExpanded((cur) => (cur === p.slug ? null : p.slug))
-                }
-                adminProjects={adminProjects}
-              />
-            </motion.li>
-          ))}
-        </AnimatePresence>
-      </ul>
-    </LayoutGroup>
+    <ul className="flex flex-col gap-y-24 md:gap-y-32">
+      <AnimatePresence mode="popLayout" initial={false}>
+        {filtered.map((p) => (
+          <motion.li
+            key={p.slug}
+            layout="position"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={SMOOTH}
+          >
+            <ProjectRow
+              project={p}
+              expanded={expanded === p.slug}
+              onToggle={() =>
+                setExpanded((cur) => (cur === p.slug ? null : p.slug))
+              }
+              adminProjects={adminProjects}
+            />
+          </motion.li>
+        ))}
+      </AnimatePresence>
+    </ul>
   );
 }
 
@@ -83,24 +79,11 @@ function ProjectRow({
   }, [expanded]);
 
   return (
-    <motion.div
-      ref={ref}
-      layout
-      transition={{ layout: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } }}
-      className="mx-auto w-full max-w-[1280px] px-5 md:px-8"
-    >
-      <div className="grid grid-cols-12 gap-x-4 gap-y-6 md:gap-x-8">
+    <div ref={ref} className="mx-auto w-full max-w-[1100px] px-5 md:px-8">
+      {/* Fixed-position grid: title (cols 2-4), image (cols 5-9), description (cols 10-12) */}
+      <div className="grid grid-cols-12 gap-x-6 gap-y-8 md:gap-x-8">
         {/* Title + meta column */}
-        <motion.div
-          layout
-          transition={{ layout: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } }}
-          className={clsx(
-            "col-span-12 row-start-2 md:row-start-1",
-            expanded
-              ? "md:col-span-3 md:col-start-1"
-              : "md:col-span-3 md:col-start-2",
-          )}
-        >
+        <div className="col-span-12 row-start-2 md:col-span-3 md:col-start-2 md:row-start-1">
           <button
             type="button"
             onClick={onToggle}
@@ -108,7 +91,7 @@ function ProjectRow({
             aria-expanded={expanded}
           >
             <Pictogram project={project} />
-            <h3 className="mt-5 text-[18px] leading-[1.25] tracking-tight md:text-[19px]">
+            <h3 className="mt-5 text-[17px] leading-[1.25] tracking-tight md:text-[18px]">
               {project.title}
             </h3>
             <div className="mt-2 text-[10.5px] uppercase tracking-[0.14em] text-muted">
@@ -119,21 +102,17 @@ function ProjectRow({
           <AnimatePresence initial={false}>
             {expanded && (
               <motion.dl
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-                transition={{
-                  duration: 0.4,
-                  delay: 0.18,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-                className="mt-12 space-y-6"
+                exit={{ opacity: 0, y: 6 }}
+                transition={{ ...SMOOTH, delay: 0.12 }}
+                className="mt-10 space-y-5"
               >
                 <Meta label="Client" value={project.client} />
                 <Meta label="Typology" value={cat.name} />
                 <Meta label="Size m²/ft²" value={project.size} />
                 <Meta label="Status" value={project.status} />
-                <div className="pt-4">
+                <div className="pt-3">
                   <div className="text-[10px] uppercase tracking-[0.14em] text-muted">
                     Share
                   </div>
@@ -142,20 +121,13 @@ function ProjectRow({
               </motion.dl>
             )}
           </AnimatePresence>
-        </motion.div>
+        </div>
 
-        {/* Image column */}
-        <motion.button
-          layout
-          transition={{ layout: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } }}
+        {/* Image column - never moves */}
+        <button
           type="button"
           onClick={onToggle}
-          className={clsx(
-            "group col-span-12 row-start-1 block",
-            expanded
-              ? "md:col-span-6 md:col-start-4"
-              : "md:col-span-7 md:col-start-5",
-          )}
+          className="group col-span-12 row-start-1 block md:col-span-5 md:col-start-5"
           aria-label={`${expanded ? "Collapse" : "Expand"} ${project.title}`}
         >
           <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink/[0.04]">
@@ -163,27 +135,24 @@ function ProjectRow({
               src={project.image}
               alt={project.title}
               fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover transition-transform duration-[1.4s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.025]"
-              priority={false}
+              sizes="(max-width: 768px) 100vw, 480px"
+              className="object-cover transition-transform duration-[1.2s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.02]"
             />
           </div>
-        </motion.button>
+        </button>
 
-        {/* Description column (only expanded) */}
-        <AnimatePresence>
+        {/* Description column - fades in on right (cols 10-12) */}
+        <AnimatePresence initial={false}>
           {expanded && (
             <motion.div
               key="desc"
-              initial={{ opacity: 0, x: 24 }}
+              initial={{ opacity: 0, x: 12 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 24 }}
-              transition={{
-                duration: 0.5,
-                delay: 0.18,
-                ease: [0.16, 1, 0.3, 1],
-              }}
-              className="col-span-12 row-start-3 md:col-span-3 md:col-start-10 md:row-start-1"
+              exit={{ opacity: 0, x: 12 }}
+              transition={{ ...SMOOTH, delay: 0.15 }}
+              className={clsx(
+                "col-span-12 row-start-3 md:col-span-3 md:col-start-10 md:row-start-1",
+              )}
             >
               <p className="text-[13.5px] leading-[1.65]">
                 {project.summary}
@@ -199,28 +168,26 @@ function ProjectRow({
       </div>
 
       {/* Extended horizontal gallery */}
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {expanded && gallery.length > 1 && (
           <motion.div
             key="extended"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 16 }}
-            transition={{
-              duration: 0.55,
-              delay: 0.25,
-              ease: [0.16, 1, 0.3, 1],
-            }}
-            className="mt-16 md:mt-20"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={SMOOTH}
+            style={{ overflow: "hidden" }}
           >
-            <ExtendedGallery
-              gallery={gallery.slice(1)}
-              project={project}
-            />
+            <div className="mt-12 md:mt-16">
+              <ExtendedGallery
+                gallery={gallery.slice(1)}
+                project={project}
+              />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }
 
@@ -233,10 +200,9 @@ function Pictogram({ project }: { project: Project }) {
 }
 
 function CategoryGlyph({ category }: { category: Category }) {
-  // Abstract architectural marks per discipline
   if (category === "arch") {
     return (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="square" strokeLinejoin="miter">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="square">
         <path d="M3 19h18" />
         <path d="M5 19V9l7-5 7 5v10" />
         <path d="M10 19v-6h4v6" />
@@ -254,7 +220,7 @@ function CategoryGlyph({ category }: { category: Category }) {
     );
   }
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="square" strokeLinejoin="miter">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="square">
       <path d="M3 17h18" />
       <path d="M3 17l4-7h10l4 7" />
       <path d="M9 17v-3" />
@@ -282,6 +248,7 @@ function ShareRow({ title }: { title: string }) {
         href={url}
         aria-label="Email"
         className="grid h-7 w-7 place-items-center bg-ink/[0.06] text-muted transition-colors hover:bg-ink hover:text-paper"
+        onClick={(e) => e.stopPropagation()}
       >
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
           <rect x="3" y="5" width="18" height="14" rx="1" />
@@ -364,21 +331,21 @@ function ExtendedGallery({
         {gallery.map((src, i) => (
           <figure
             key={`${i}-${src.slice(0, 32)}`}
-            className="relative aspect-[4/3] w-[78vw] max-w-[820px] shrink-0 snap-start overflow-hidden bg-ink/[0.04] md:w-[58vw]"
+            className="relative aspect-[4/3] w-[78vw] max-w-[640px] shrink-0 snap-start overflow-hidden bg-ink/[0.04] md:w-[48vw]"
           >
             <SmartImage
               src={src}
               alt={`${project.title} ${i + 2}`}
               fill
-              sizes="(max-width: 768px) 80vw, 60vw"
+              sizes="(max-width: 768px) 80vw, 50vw"
               className="object-cover"
             />
           </figure>
         ))}
 
-        <aside className="flex w-[78vw] max-w-[820px] shrink-0 snap-start items-center justify-center bg-ink p-10 text-paper md:w-[58vw] md:p-16">
-          <blockquote className="max-w-[36ch]">
-            <p className="text-[22px] leading-[1.25] tracking-tight md:text-[28px]">
+        <aside className="flex w-[78vw] max-w-[640px] shrink-0 snap-start items-center justify-center bg-ink p-10 text-paper md:w-[48vw] md:p-14">
+          <blockquote className="max-w-[34ch]">
+            <p className="text-[20px] leading-[1.3] tracking-tight md:text-[24px]">
               “The drawings matched the steel. We came in with a brief and
               walked out with a building that took the brief somewhere we
               hadn’t asked it to go.”
