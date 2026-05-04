@@ -6,8 +6,11 @@ import { motion } from "framer-motion";
 import { Logo } from "./logo";
 import { useTheme } from "./theme-provider";
 import { useNavigate, useRouterPath } from "./spa-router";
+import { useIntroDone } from "./intro-context";
 import { SearchOverlay } from "./search-overlay";
 import type { Category } from "@/lib/projects";
+
+const MORPH = { duration: 1.2, ease: [0.22, 1, 0.36, 1] as const };
 
 type FilterKey = "all" | Category | "news";
 
@@ -39,6 +42,7 @@ export function Header() {
   const active = FILTER_FROM_PATH(path);
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
+  const introDone = useIntroDone();
   const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
@@ -70,10 +74,21 @@ export function Header() {
             aria-label="Arengcon home"
             className="flex items-center gap-2.5"
           >
-            <Logo className="h-7 w-7 md:h-8 md:w-8" priority />
-            <span className="text-[15px] font-medium tracking-tight md:text-[16px]">
-              Arengcon
-            </span>
+            {introDone ? (
+              <motion.div
+                layoutId="brand-mark"
+                transition={{ layout: MORPH }}
+                className="flex items-center gap-2.5"
+              >
+                <Logo className="h-7 w-7 md:h-8 md:w-8" priority />
+                <span className="text-[15px] font-medium tracking-tight md:text-[16px]">
+                  Arengcon
+                </span>
+              </motion.div>
+            ) : (
+              // Reserve the same space during splash so layout doesn't jump
+              <span aria-hidden className="block h-7 w-[110px] md:h-8 md:w-[120px]" />
+            )}
           </a>
 
           <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-9 md:flex lg:gap-14">
