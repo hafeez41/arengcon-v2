@@ -90,25 +90,27 @@ export function Header() {
             )}
           </a>
 
-          <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-9 md:flex lg:gap-14">
+          {/* Desktop nav — vertical rail on the left, sits well below the
+              fixed header so it never overlaps with the logo. */}
+          <nav className="pointer-events-none fixed left-5 top-[180px] z-40 hidden flex-col items-start gap-5 md:flex md:left-8">
             {FILTERS.map((f) => (
               <a
                 key={f.key}
                 href={f.href}
                 onClick={go(f.href)}
                 className={clsx(
-                  "relative text-[11px] font-medium uppercase tracking-[0.18em] transition-colors md:text-[12px]",
+                  "pointer-events-auto relative flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.18em] transition-colors duration-200",
                   active === f.key ? "text-ink" : "text-muted hover:text-ink",
                 )}
               >
-                {f.label}
                 {active === f.key && (
                   <motion.span
-                    layoutId="filter-underline"
+                    layoutId="filter-rail-mark"
                     transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                    className="absolute -bottom-2 left-0 right-0 h-px bg-ink"
+                    className="block h-px w-3 bg-ink"
                   />
                 )}
+                <span>{f.label}</span>
               </a>
             ))}
           </nav>
