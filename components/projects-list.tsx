@@ -78,20 +78,32 @@ function ProjectRow({
 }) {
   const cat = CATEGORY_LABELS[project.category];
   const gallery = projectGallery(project, adminProjects);
+  const galleryRest = gallery.slice(1);
 
   return (
-    <div className="mx-auto w-full max-w-[1180px] px-5 md:px-8">
-      <div className="grid grid-cols-12 items-start gap-x-6 gap-y-8 md:gap-x-8">
-        {/* Title column — slides via layout */}
+    <div
+      className={clsx(
+        "w-full",
+        expanded
+          ? "overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          : "overflow-visible",
+      )}
+    >
+      <motion.div
+        layout
+        transition={{ layout: FLOAT }}
+        className={clsx(
+          "flex items-start gap-6 md:gap-10",
+          expanded
+            ? "w-max px-5 pb-4 md:px-12"
+            : "mx-auto max-w-[1100px] px-5 md:px-8",
+        )}
+      >
+        {/* Title block */}
         <motion.div
           layout
           transition={{ layout: FLOAT }}
-          className={clsx(
-            "col-span-12 row-start-2 md:row-start-1",
-            expanded
-              ? "md:col-span-3 md:col-start-1"
-              : "md:col-span-3 md:col-start-2",
-          )}
+          className="w-[260px] shrink-0 md:w-[280px]"
         >
           <button
             type="button"
@@ -132,17 +144,17 @@ function ProjectRow({
           </motion.div>
         </motion.div>
 
-        {/* Image — grows via layout (FLIP) */}
+        {/* Main image */}
         <motion.button
           layout
           transition={{ layout: FLOAT }}
           type="button"
           onClick={onClick}
           className={clsx(
-            "group col-span-12 row-start-1 block",
+            "group block shrink-0",
             expanded
-              ? "md:col-span-6 md:col-start-4"
-              : "md:col-span-5 md:col-start-5",
+              ? "w-[480px] md:w-[600px]"
+              : "w-[420px] md:w-[480px]",
           )}
           aria-label={`${expanded ? "Collapse" : "Expand"} ${project.title}`}
         >
@@ -156,56 +168,86 @@ function ProjectRow({
               alt={project.title}
               fill
               sizes="(max-width: 768px) 100vw, 600px"
-              className="object-cover"
+              className="object-cover transition-transform duration-[1.2s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.02]"
             />
           </motion.div>
         </motion.button>
 
-        {/* Description — height collapses to 0 when not expanded so longer
-            descriptions don't inflate the row height of the collapsed state. */}
+        {/* Description column — width animates 0 ↔ 280 */}
         <motion.div
           initial={false}
           animate={{
+            width: expanded ? 280 : 0,
             opacity: expanded ? 1 : 0,
-            height: expanded ? "auto" : 0,
           }}
           transition={FLOAT}
-          aria-hidden={!expanded}
           style={{ overflow: "hidden" }}
+          aria-hidden={!expanded}
           className={clsx(
-            "col-span-12 row-start-3 md:col-span-3 md:col-start-10 md:row-start-1",
+            "shrink-0",
             !expanded && "pointer-events-none select-none",
           )}
         >
-          <p className="text-[13.5px] leading-[1.65]">{project.summary}</p>
-          <div className="mt-5 space-y-3 text-[13px] leading-[1.65] text-ink/85">
-            {project.description.map((para, i) => (
-              <p key={i}>{para}</p>
-            ))}
+          <div className="w-[280px]">
+            <p className="text-[13.5px] leading-[1.65]">{project.summary}</p>
+            <div className="mt-5 space-y-3 text-[13px] leading-[1.65] text-ink/85">
+              {project.description.map((para, i) => (
+                <p key={i}>{para}</p>
+              ))}
+            </div>
           </div>
         </motion.div>
-      </div>
 
-      {/* Extended horizontal gallery */}
-      {gallery.length > 1 && (
-        <motion.div
-          initial={false}
-          animate={{
-            height: expanded ? "auto" : 0,
-            opacity: expanded ? 1 : 0,
-          }}
-          transition={FLOAT}
-          aria-hidden={!expanded}
-          style={{ overflow: "hidden" }}
-        >
-          <div className="mt-12 md:mt-16">
-            <ExtendedGallery
-              gallery={gallery.slice(1)}
-              project={project}
-            />
-          </div>
-        </motion.div>
-      )}
+        {/* Extra gallery panels — slide in from the right when expanded */}
+        {expanded &&
+          galleryRest.map((src, i) => (
+            <motion.figure
+              key={`${i}-${src.slice(0, 32)}`}
+              initial={{ opacity: 0, x: 60 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 60 }}
+              transition={{ ...FLOAT, delay: 0.18 + i * 0.06 }}
+              className="shrink-0"
+            >
+              <div className="relative aspect-[4/3] w-[440px] overflow-hidden bg-ink/[0.04] md:w-[540px]">
+                <SmartImage
+                  src={src}
+                  alt={`${project.title} ${i + 2}`}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 540px"
+                  className="object-cover"
+                />
+              </div>
+            </motion.figure>
+          ))}
+
+        {/* Pull quote at the end of the track */}
+        {expanded && (
+          <motion.aside
+            initial={{ opacity: 0, x: 60 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 60 }}
+            transition={{
+              ...FLOAT,
+              delay: 0.18 + galleryRest.length * 0.06,
+            }}
+            className="flex aspect-[4/3] w-[440px] shrink-0 items-center justify-center bg-ink p-10 text-paper md:w-[540px] md:p-14"
+          >
+            <blockquote className="max-w-[32ch]">
+              <p className="text-[20px] leading-[1.3] tracking-tight md:text-[24px]">
+                The drawings matched the steel — we came in with a brief and
+                walked out with a building the brief never asked for.
+              </p>
+              <footer className="mt-6 text-[10px] uppercase tracking-[0.18em] text-paper/70">
+                — {project.client}
+              </footer>
+            </blockquote>
+          </motion.aside>
+        )}
+
+        {/* End-of-track padding so last panel doesn't kiss the edge */}
+        {expanded && <div aria-hidden className="w-12 shrink-0 md:w-24" />}
+      </motion.div>
     </div>
   );
 }
@@ -302,89 +344,3 @@ function ShareRow({ title }: { title: string }) {
   );
 }
 
-function ExtendedGallery({
-  gallery,
-  project,
-}: {
-  gallery: string[];
-  project: Project;
-}) {
-  const scrollerRef = useRef<HTMLDivElement | null>(null);
-
-  const scrollBy = (dir: 1 | -1) => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir * el.clientWidth * 0.7, behavior: "smooth" });
-  };
-
-  return (
-    <div>
-      <div className="mb-4 flex items-end justify-between gap-3">
-        <div className="text-[10px] uppercase tracking-[0.18em] text-muted">
-          More — scroll →
-        </div>
-        <div className="flex gap-1">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              scrollBy(-1);
-            }}
-            aria-label="Previous"
-            className="grid h-9 w-9 place-items-center border border-line transition-colors hover:bg-ink/[0.04]"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              scrollBy(1);
-            }}
-            aria-label="Next"
-            className="grid h-9 w-9 place-items-center border border-line transition-colors hover:bg-ink/[0.04]"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <div
-        ref={scrollerRef}
-        className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        {gallery.map((src, i) => (
-          <figure
-            key={`${i}-${src.slice(0, 32)}`}
-            className="relative aspect-[4/3] w-[78vw] max-w-[640px] shrink-0 snap-start overflow-hidden bg-ink/[0.04] md:w-[48vw]"
-          >
-            <SmartImage
-              src={src}
-              alt={`${project.title} ${i + 2}`}
-              fill
-              sizes="(max-width: 768px) 80vw, 50vw"
-              className="object-cover"
-            />
-          </figure>
-        ))}
-
-        <aside className="flex w-[78vw] max-w-[640px] shrink-0 snap-start items-center justify-center bg-ink p-10 text-paper md:w-[48vw] md:p-14">
-          <blockquote className="max-w-[34ch]">
-            <p className="text-[20px] leading-[1.3] tracking-tight md:text-[24px]">
-              “The drawings matched the steel. We came in with a brief and
-              walked out with a building that took the brief somewhere we
-              hadn’t asked it to go.”
-            </p>
-            <footer className="mt-6 text-[10px] uppercase tracking-[0.18em] text-paper/70">
-              — {project.client}
-            </footer>
-          </blockquote>
-        </aside>
-      </div>
-    </div>
-  );
-}
