@@ -115,11 +115,11 @@ export function Header() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1">
             <button
               onClick={() => setSearchOpen(true)}
               aria-label="Search"
-              className="grid h-8 w-8 place-items-center transition-colors hover:bg-ink/5"
+              className="grid h-9 w-9 place-items-center rounded-full transition-colors duration-200 hover:bg-ink/[0.06]"
             >
               <svg
                 width="15"
@@ -134,17 +134,10 @@ export function Header() {
                 <path d="m20 20-3.5-3.5" />
               </svg>
             </button>
-            <a
-              href="/"
-              onClick={go("/")}
-              className="hidden text-[10.5px] uppercase tracking-[0.16em] text-muted transition-colors hover:text-ink md:inline"
-            >
-              {labelFor(active)}
-            </a>
             <button
               onClick={toggle}
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              className="grid h-8 w-8 place-items-center transition-colors hover:bg-ink/5"
+              className="grid h-9 w-9 place-items-center rounded-full transition-colors duration-200 hover:bg-ink/[0.06]"
             >
               <ThemeIcon dark={theme === "dark"} />
             </button>
