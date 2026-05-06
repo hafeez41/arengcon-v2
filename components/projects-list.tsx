@@ -95,7 +95,7 @@ function ProjectRow({
         className={clsx(
           "flex items-start gap-6 md:gap-10",
           expanded
-            ? "w-max px-5 pb-4 md:px-12"
+            ? "w-max px-5 pb-4 md:pl-[220px] md:pr-12"
             : "mx-auto max-w-[1100px] px-5 md:px-8",
         )}
       >
