@@ -90,46 +90,28 @@ export function Header() {
             )}
           </a>
 
-          {/* Desktop nav — vertical rail on the left, sits well below the
-              fixed header so it never overlaps with the logo. */}
-          <nav className="pointer-events-none fixed left-6 top-[180px] z-40 hidden md:flex md:left-10">
-            <div className="flex flex-col">
-              <div className="mb-5 text-[9.5px] uppercase tracking-[0.22em] text-muted/70">
-                Index
-              </div>
-              <ul className="flex flex-col">
-                {FILTERS.map((f, i) => (
-                  <li key={f.key}>
-                    <a
-                      href={f.href}
-                      onClick={go(f.href)}
-                      className={clsx(
-                        "pointer-events-auto group relative flex items-baseline gap-3 py-2 text-[11px] font-medium uppercase tracking-[0.16em] transition-colors duration-200",
-                        active === f.key
-                          ? "text-ink"
-                          : "text-muted hover:text-ink",
-                      )}
-                    >
-                      <span className="tabnum text-[9.5px] text-muted/70 group-hover:text-muted">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <span>{f.label}</span>
-                      {active === f.key && (
-                        <motion.span
-                          layoutId="filter-rail-mark"
-                          transition={{
-                            type: "spring",
-                            stiffness: 380,
-                            damping: 32,
-                          }}
-                          className="absolute -left-4 top-1/2 block h-px w-2.5 -translate-y-1/2 bg-ink"
-                        />
-                      )}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {/* Desktop nav — vertical rail on the left. */}
+          <nav className="pointer-events-none fixed left-6 top-[200px] z-40 hidden flex-col items-start gap-7 md:flex md:left-12">
+            {FILTERS.map((f) => (
+              <a
+                key={f.key}
+                href={f.href}
+                onClick={go(f.href)}
+                className={clsx(
+                  "pointer-events-auto relative flex items-center text-[12.5px] font-medium uppercase tracking-[0.18em] transition-colors duration-200",
+                  active === f.key ? "text-ink" : "text-muted hover:text-ink",
+                )}
+              >
+                {active === f.key && (
+                  <motion.span
+                    layoutId="filter-rail-mark"
+                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                    className="absolute -left-5 block h-[2px] w-3 bg-ink"
+                  />
+                )}
+                <span>{f.label}</span>
+              </a>
+            ))}
           </nav>
 
           <div className="flex items-center gap-1">
