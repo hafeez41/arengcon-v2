@@ -2,48 +2,91 @@
 
 import { useEffect, useState } from "react";
 import clsx from "clsx";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Logo } from "./logo";
 import { useTheme } from "./theme-provider";
 import { useNavigate, useRouterPath } from "./spa-router";
 import { useIntroDone } from "./intro-context";
 import { SearchOverlay } from "./search-overlay";
-import type { Category } from "@/lib/projects";
+import {
+  type Category,
+  SUBCATEGORIES,
+  categoryHasSubcategories,
+} from "@/lib/projects";
 
 const MORPH = { duration: 1.2, ease: [0.22, 1, 0.36, 1] as const };
+const FLOAT = { duration: 0.85, ease: [0.22, 1, 0.36, 1] as const };
 
-type FilterKey = "all" | Category | "updates";
+export type FilterKey = "all" | Category | "updates";
+
+export type RouteFilter = {
+  category: FilterKey;
+  subcategory?: string;
+};
 
 const FILTERS: { key: FilterKey; label: string; href: string }[] = [
   { key: "arch", label: "Architecture", href: "/architecture" },
   { key: "int", label: "Interiors", href: "/interiors" },
   { key: "cons", label: "Construction", href: "/construction" },
+  { key: "land", label: "Landscaping", href: "/landscaping" },
   { key: "updates", label: "Updates", href: "/updates" },
 ];
 
+const PATH_TO_CATEGORY: Record<string, FilterKey> = {
+  architecture: "arch",
+  interiors: "int",
+  "interior-design": "int",
+  construction: "cons",
+  landscaping: "land",
+  updates: "updates",
+  news: "updates",
+};
+
 export function FILTER_FROM_PATH(path: string): FilterKey {
-  if (path.startsWith("/architecture")) return "arch";
-  if (path.startsWith("/interiors")) return "int";
-  if (path.startsWith("/construction")) return "cons";
-  if (path.startsWith("/updates") || path.startsWith("/news")) return "updates";
-  return "all";
+  return parseRouteFilter(path).category;
+}
+
+export function parseRouteFilter(path: string): RouteFilter {
+  const clean = path.split("?")[0].split("#")[0].replace(/^\/+/, "").replace(/\/+$/, "");
+  if (!clean) return { category: "all" };
+  const [first, second] = clean.split("/");
+  const cat = PATH_TO_CATEGORY[first];
+  if (!cat) return { category: "all" };
+  if (
+    second &&
+    cat !== "updates" &&
+    cat !== "all" &&
+    categoryHasSubcategories(cat as Category) &&
+    SUBCATEGORIES[cat as Category].some((s) => s.slug === second)
+  ) {
+    return { category: cat, subcategory: second };
+  }
+  return { category: cat };
 }
 
 function labelFor(f: FilterKey): string {
   if (f === "arch") return "Architecture";
   if (f === "int") return "Interiors";
   if (f === "cons") return "Construction";
+  if (f === "land") return "Landscaping";
   if (f === "updates") return "Updates";
   return "All work";
 }
 
 export function Header() {
   const path = useRouterPath();
-  const active = FILTER_FROM_PATH(path);
+  const { category: active, subcategory: activeSub } = parseRouteFilter(path);
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
   const introDone = useIntroDone();
   const [searchOpen, setSearchOpen] = useState(false);
+
+  // Local override so the user can manually close the active category's
+  // dropdown without changing the URL. Reset whenever the path changes.
+  const [closed, setClosed] = useState<FilterKey | null>(null);
+  useEffect(() => {
+    setClosed(null);
+  }, [path]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -90,30 +133,6 @@ export function Header() {
             )}
           </a>
 
-          {/* Desktop nav — vertical rail on the left. */}
-          <nav className="pointer-events-none fixed left-6 top-[200px] z-40 hidden flex-col items-start gap-7 md:flex md:left-12">
-            {FILTERS.map((f) => (
-              <a
-                key={f.key}
-                href={f.href}
-                onClick={go(f.href)}
-                className={clsx(
-                  "pointer-events-auto relative flex items-center text-[12.5px] font-medium uppercase tracking-[0.18em] transition-colors duration-200",
-                  active === f.key ? "text-ink" : "text-muted hover:text-ink",
-                )}
-              >
-                {active === f.key && (
-                  <motion.span
-                    layoutId="filter-rail-mark"
-                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                    className="absolute -left-5 block h-[2px] w-3 bg-ink"
-                  />
-                )}
-                <span>{f.label}</span>
-              </a>
-            ))}
-          </nav>
-
           <div className="flex items-center gap-1">
             <button
               onClick={() => setSearchOpen(true)}
@@ -143,7 +162,7 @@ export function Header() {
           </div>
         </div>
 
-        <nav className="flex items-center justify-between gap-2 px-4 pb-3 md:hidden">
+        <nav className="flex items-center justify-between gap-2 overflow-x-auto px-4 pb-3 md:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {FILTERS.map((f) => (
             <a
               key={f.key}
@@ -162,6 +181,103 @@ export function Header() {
           ))}
         </nav>
       </header>
+
+      {/* Desktop side rail — categories + animated subcategory tree. */}
+      <aside className="pointer-events-none fixed left-6 top-[200px] z-40 hidden md:block md:left-12">
+        <ul className="flex flex-col">
+          {FILTERS.map((f) => {
+            const isActive = active === f.key;
+            const hasSubs =
+              f.key !== "all" &&
+              f.key !== "updates" &&
+              categoryHasSubcategories(f.key as Category);
+            // Auto-show when the category is active in the URL, but allow
+            // the user to override by clicking the parent again.
+            const showSubs = hasSubs && isActive && closed !== f.key;
+            const onCatClick = (e: React.MouseEvent) => {
+              e.preventDefault();
+              if (isActive && hasSubs) {
+                // Toggle the dropdown without changing the URL.
+                setClosed((prev) => (prev === f.key ? null : f.key));
+              } else {
+                setClosed(null);
+                navigate(f.href);
+              }
+            };
+            return (
+              <li key={f.key} className="flex flex-col">
+                <a
+                  href={f.href}
+                  onClick={onCatClick}
+                  className={clsx(
+                    "pointer-events-auto relative flex items-center py-3 text-[12.5px] font-medium uppercase tracking-[0.18em] transition-colors duration-200",
+                    isActive ? "text-ink" : "text-muted hover:text-ink",
+                  )}
+                >
+                  {isActive && !activeSub && (
+                    <motion.span
+                      layoutId="filter-rail-mark"
+                      transition={{
+                        type: "spring",
+                        stiffness: 380,
+                        damping: 32,
+                      }}
+                      className="absolute -left-5 block h-[2px] w-3 bg-ink"
+                    />
+                  )}
+                  <span>{f.label}</span>
+                </a>
+
+                {hasSubs && (
+                  <motion.div
+                    initial={false}
+                    animate={{
+                      height: showSubs ? "auto" : 0,
+                      opacity: showSubs ? 1 : 0,
+                    }}
+                    transition={FLOAT}
+                    style={{ overflow: "hidden" }}
+                  >
+                    <ul className="ml-1 mt-1 flex flex-col border-l border-line/60 pl-4">
+                      {SUBCATEGORIES[f.key as Category].map((sub) => {
+                        const isSubActive = activeSub === sub.slug;
+                        const subHref = `${f.href}/${sub.slug}`;
+                        return (
+                          <li key={sub.slug}>
+                            <a
+                              href={subHref}
+                              onClick={go(subHref)}
+                              className={clsx(
+                                "pointer-events-auto relative block py-1.5 text-[11px] tracking-[0.06em] transition-colors duration-200",
+                                isSubActive
+                                  ? "text-ink"
+                                  : "text-muted/80 hover:text-ink",
+                              )}
+                            >
+                              {isSubActive && (
+                                <motion.span
+                                  layoutId="filter-rail-mark"
+                                  transition={{
+                                    type: "spring",
+                                    stiffness: 380,
+                                    damping: 32,
+                                  }}
+                                  className="absolute -left-[21px] top-1/2 block h-[2px] w-2.5 -translate-y-1/2 bg-ink"
+                                />
+                              )}
+                              {sub.label}
+                            </a>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </motion.div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </aside>
 
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>

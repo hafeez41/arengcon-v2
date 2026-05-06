@@ -8,6 +8,7 @@ export type AdminProject = {
   id: string;
   title: string;
   category: Category;
+  subcategory?: string;
   client: string;
   location: string;
   year: number;

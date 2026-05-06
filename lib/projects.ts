@@ -1,4 +1,6 @@
-export type Category = "arch" | "int" | "cons";
+export type Category = "arch" | "int" | "cons" | "land";
+
+export type Subcategory = string; // slug, e.g. "villas", "lounges"
 
 export type Project = {
   slug: string;
@@ -7,6 +9,7 @@ export type Project = {
   location: string;
   year: number;
   category: Category;
+  subcategory?: Subcategory;
   status: "Built" | "In Progress" | "Concept";
   size: string;
   summary: string;
@@ -31,7 +34,54 @@ export const CATEGORY_LABELS: Record<Category, { name: string; tag: string; href
     tag: "Constructed projects",
     href: "/construction",
   },
+  land: {
+    name: "Landscaping",
+    tag: "Landscape projects",
+    href: "/landscaping",
+  },
 };
+
+// Subcategories grouped by parent category. Each entry has a slug (used in URLs
+// and stored on the project) and a display label.
+export const SUBCATEGORIES: Record<Category, { slug: string; label: string }[]> = {
+  arch: [
+    { slug: "villas", label: "Villas" },
+    { slug: "apartments", label: "Apartments" },
+    { slug: "terraces", label: "Terraces" },
+    { slug: "commercials", label: "Commercials" },
+    { slug: "administratives", label: "Administratives" },
+    { slug: "educationals", label: "Educationals" },
+  ],
+  int: [
+    { slug: "lounges", label: "Lounges" },
+    { slug: "bedrooms", label: "Bedrooms" },
+    { slug: "dining-rooms", label: "Dining Rooms" },
+    { slug: "kitchens", label: "Kitchens" },
+    { slug: "bathrooms", label: "Bathrooms" },
+    { slug: "home-offices", label: "Home Offices" },
+    { slug: "home-theatres", label: "Home Theatres" },
+    { slug: "corridors", label: "Corridors" },
+    { slug: "foyers", label: "Foyers" },
+    { slug: "home-gyms", label: "Home Gyms" },
+    { slug: "conference-rooms", label: "Conference Rooms" },
+    { slug: "offices", label: "Offices" },
+    { slug: "restaurants", label: "Restaurants" },
+  ],
+  cons: [],
+  land: [],
+};
+
+export function categoryHasSubcategories(c: Category): boolean {
+  return SUBCATEGORIES[c].length > 0;
+}
+
+export function subcategoryLabel(
+  category: Category,
+  subSlug: string | undefined,
+): string | undefined {
+  if (!subSlug) return undefined;
+  return SUBCATEGORIES[category].find((s) => s.slug === subSlug)?.label;
+}
 
 export const projects: Project[] = [
   {
@@ -41,6 +91,7 @@ export const projects: Project[] = [
     location: "Albany, NY",
     year: 2024,
     category: "arch",
+    subcategory: "administratives",
     status: "Built",
     size: "1.2 km · 4 lanes",
     summary:
@@ -59,6 +110,7 @@ export const projects: Project[] = [
     location: "Hartford, CT",
     year: 2026,
     category: "arch",
+    subcategory: "educationals",
     status: "In Progress",
     size: "92,000 sq ft",
     summary:
@@ -77,6 +129,7 @@ export const projects: Project[] = [
     location: "Hudson Valley, NY",
     year: 2024,
     category: "arch",
+    subcategory: "villas",
     status: "Built",
     size: "8,400 sq ft",
     summary:
@@ -95,6 +148,7 @@ export const projects: Project[] = [
     location: "Boston, MA",
     year: 2026,
     category: "arch",
+    subcategory: "administratives",
     status: "Concept",
     size: "2.4 km linear",
     summary:
@@ -113,6 +167,7 @@ export const projects: Project[] = [
     location: "Toronto, ON",
     year: 2025,
     category: "arch",
+    subcategory: "commercials",
     status: "In Progress",
     size: "1.4M sq ft",
     summary:
@@ -131,6 +186,7 @@ export const projects: Project[] = [
     location: "Brooklyn, NY",
     year: 2023,
     category: "int",
+    subcategory: "offices",
     status: "Built",
     size: "210,000 sq ft",
     summary:
@@ -149,6 +205,7 @@ export const projects: Project[] = [
     location: "Manhattan, NY",
     year: 2024,
     category: "int",
+    subcategory: "home-offices",
     status: "Built",
     size: "6,200 sq ft",
     summary:
@@ -166,6 +223,7 @@ export const projects: Project[] = [
     location: "Toronto, ON",
     year: 2024,
     category: "int",
+    subcategory: "restaurants",
     status: "Built",
     size: "4,800 sq ft",
     summary:
@@ -183,6 +241,7 @@ export const projects: Project[] = [
     location: "London, UK",
     year: 2025,
     category: "int",
+    subcategory: "conference-rooms",
     status: "Built",
     size: "1,400 sq ft",
     summary:
@@ -263,6 +322,61 @@ export const projects: Project[] = [
     ],
     image: "https://picsum.photos/seed/freeman-tunnel-portal/1600/1200",
     accent: "#2a2e35",
+  },
+
+  {
+    slug: "ridgeline-courtyard",
+    title: "Ridgeline Courtyard",
+    client: "Private",
+    location: "Abuja, Nigeria",
+    year: 2025,
+    category: "land",
+    status: "Built",
+    size: "0.4 ha",
+    summary:
+      "A walled garden built into the slope behind a private residence. Stone terraces step down to a quiet reflecting pool.",
+    description: [
+      "The courtyard works the natural grade — three drystone walls hold the planting and a single channel carries rainwater across each terrace before it lands in the pool below.",
+      "Native shrubs and slow-growing trees were chosen for low maintenance and zero irrigation past the first rainy season.",
+    ],
+    image: "https://picsum.photos/seed/ridgeline-courtyard/1600/1200",
+    accent: "#3f4a35",
+  },
+  {
+    slug: "river-walk-park",
+    title: "River Walk Park",
+    client: "Federal Capital Development Authority",
+    location: "Abuja, Nigeria",
+    year: 2026,
+    category: "land",
+    status: "In Progress",
+    size: "1.8 km · 6 ha",
+    summary:
+      "A linear public park along a previously inaccessible stretch of river, with shaded promenades, terraced seating, and rain gardens.",
+    description: [
+      "The masterplan opens 1.8 km of riverbank to public use for the first time, threading shaded walks, a cycle route, and four staircase plazas connecting the bank to the streets above.",
+      "Stormwater is collected in planted swales that double as the route's bench walls, and irrigation is fully recycled greywater from adjacent buildings.",
+    ],
+    image: "https://picsum.photos/seed/river-walk-park/1600/1200",
+    accent: "#2d4a3a",
+  },
+  {
+    slug: "cooperative-rooftop",
+    title: "Cooperative Rooftop",
+    client: "Lagos Housing Cooperative",
+    location: "Lagos, Nigeria",
+    year: 2024,
+    category: "land",
+    status: "Built",
+    size: "1,200 sq m",
+    summary:
+      "A rooftop garden and growing plot for residents of a 96-unit apartment cooperative, planted in raised modular beds.",
+    description: [
+      "Residents can claim a 1.5 m² bed for an annual contribution. The shared infrastructure — water, soil delivery, tool storage — is managed by an elected rooftop committee.",
+      "After eighteen months, the rooftop produces enough seasonal greens to supply the building's ground-floor café free of charge.",
+    ],
+    image: "https://picsum.photos/seed/cooperative-rooftop/1600/1200",
+    accent: "#4a4a2a",
   },
 ];
 

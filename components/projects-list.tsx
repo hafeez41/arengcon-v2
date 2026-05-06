@@ -22,28 +22,38 @@ export type FilterKey = "all" | Category | "updates";
 const FLOAT = { duration: 1.4, ease: [0.22, 1, 0.36, 1] as const };
 const ENTRY = { duration: 1.2, ease: [0.22, 1, 0.36, 1] as const };
 
-export function ProjectsList({ filter }: { filter: FilterKey }) {
+export function ProjectsList({
+  filter,
+  subcategory,
+}: {
+  filter: FilterKey;
+  subcategory?: string;
+}) {
   const { list, adminProjects } = useEffectiveProjects();
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     setExpanded(null);
-  }, [filter]);
+  }, [filter, subcategory]);
 
   const handleClick = (slug: string) => {
-    // Simultaneous swap — framer cross-fades both projects in place
     setExpanded((cur) => (cur === slug ? null : slug));
   };
 
-  const filtered =
-    filter === "all" ? list : list.filter((p) => p.category === filter);
+  const filtered = list.filter((p) => {
+    if (filter !== "all" && p.category !== filter) return false;
+    if (subcategory && p.subcategory !== subcategory) return false;
+    return true;
+  });
+
+  const filterKey = subcategory ? `${filter}/${subcategory}` : `${filter}`;
 
   return (
     <ul className="flex flex-col gap-y-24 md:gap-y-32">
       <AnimatePresence mode="popLayout" initial={true}>
         {filtered.map((p) => (
           <motion.li
-            key={`${filter}-${p.slug}`}
+            key={`${filterKey}-${p.slug}`}
             layout="position"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

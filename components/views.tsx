@@ -1,11 +1,17 @@
 "use client";
 
-import { ProjectsList, type FilterKey } from "./projects-list";
+import { ProjectsList } from "./projects-list";
 import { UpdatesList } from "./updates-list";
 import { SiteFooter } from "./site-footer";
-import { FILTER_FROM_PATH } from "./header";
+import { parseRouteFilter, type FilterKey } from "./header";
 
-export function HomeView({ filter = "all" }: { filter?: FilterKey } = {}) {
+export function HomeView({
+  filter = "all",
+  subcategory,
+}: {
+  filter?: FilterKey;
+  subcategory?: string;
+} = {}) {
   return (
     <>
       <div className="h-[90px] md:h-[120px]" aria-hidden />
@@ -14,7 +20,7 @@ export function HomeView({ filter = "all" }: { filter?: FilterKey } = {}) {
           {filter === "updates" ? (
             <UpdatesList />
           ) : (
-            <ProjectsList filter={filter} />
+            <ProjectsList filter={filter} subcategory={subcategory} />
           )}
         </div>
       </section>
@@ -50,14 +56,6 @@ export function resolveView(path: string): React.ReactNode {
   const projectMatch = clean.match(/^\/projects\/([^/]+)$/);
   if (projectMatch) return <HomeView filter="all" />;
 
-  const filter = FILTER_FROM_PATH(clean);
-  if (clean === "/" || filter !== "all") return <HomeView filter={filter} />;
-
-  // Legacy
-  if (clean === "/architecture") return <HomeView filter="arch" />;
-  if (clean === "/interior-design") return <HomeView filter="int" />;
-  if (clean === "/construction") return <HomeView filter="cons" />;
-  if (clean === "/news" || clean === "/updates") return <HomeView filter="updates" />;
-
-  return <NotFoundView />;
+  const { category, subcategory } = parseRouteFilter(clean);
+  return <HomeView filter={category} subcategory={subcategory} />;
 }

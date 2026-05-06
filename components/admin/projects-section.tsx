@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   type AdminProject,
@@ -8,17 +8,23 @@ import {
   newId,
   upsertProject,
 } from "@/lib/admin-store";
-import { CATEGORY_LABELS } from "@/lib/projects";
+import {
+  CATEGORY_LABELS,
+  SUBCATEGORIES,
+  type Category,
+  categoryHasSubcategories,
+} from "@/lib/projects";
 import { ImageUploader, GalleryUploader } from "./image-uploader";
 
 const STATUSES = ["Built", "In Progress", "Concept"] as const;
-const CATEGORIES = ["arch", "int", "cons"] as const;
+const CATEGORIES: Category[] = ["arch", "int", "cons", "land"];
 
 function emptyProject(): AdminProject {
   return {
     id: newId("p"),
     title: "",
     category: "arch",
+    subcategory: SUBCATEGORIES.arch[0]?.slug,
     client: "",
     location: "",
     year: new Date().getFullYear(),
@@ -94,6 +100,14 @@ export function ProjectsSection({ projects }: { projects: AdminProject[] }) {
                 </h3>
                 <span className="text-[10px] uppercase tracking-[0.18em] text-ink/55">
                   {CATEGORY_LABELS[p.category].name}
+                  {p.subcategory && (
+                    <>
+                      {" · "}
+                      {SUBCATEGORIES[p.category].find(
+                        (s) => s.slug === p.subcategory,
+                      )?.label ?? p.subcategory}
+                    </>
+                  )}
                 </span>
               </div>
               <div className="mt-0.5 flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-ink/55">
@@ -158,7 +172,21 @@ function ProjectEditor({
   const set = <K extends keyof AdminProject>(k: K, v: AdminProject[K]) =>
     setDraft((d) => ({ ...d, [k]: v }));
 
-  const valid = draft.title && draft.hero && draft.summary;
+  // When the category changes, reset subcategory to the first available
+  // option (or clear it if the new category has no subcategories).
+  const setCategory = (next: Category) => {
+    const subs = SUBCATEGORIES[next];
+    setDraft((d) => ({
+      ...d,
+      category: next,
+      subcategory: subs.length ? subs[0].slug : undefined,
+    }));
+  };
+
+  const subs = SUBCATEGORIES[draft.category];
+  const subRequired = subs.length > 0;
+  const subValid = !subRequired || !!draft.subcategory;
+  const valid = !!draft.title && !!draft.hero && !!draft.summary && subValid;
 
   return (
     <motion.div
@@ -200,10 +228,10 @@ function ProjectEditor({
                 className="w-full border-b border-line bg-transparent py-2 text-sm uppercase tracking-tight outline-none focus:border-ink"
               />
             </Field>
-            <Field label="Category">
+            <Field label="Category" required>
               <select
                 value={draft.category}
-                onChange={(e) => set("category", e.target.value as AdminProject["category"])}
+                onChange={(e) => setCategory(e.target.value as Category)}
                 className="w-full border-b border-line bg-transparent py-2 text-sm uppercase tracking-tight outline-none focus:border-ink"
               >
                 {CATEGORIES.map((c) => (
@@ -213,6 +241,23 @@ function ProjectEditor({
                 ))}
               </select>
             </Field>
+            {subRequired && (
+              <Field label="Subcategory" required>
+                <select
+                  value={draft.subcategory ?? ""}
+                  onChange={(e) =>
+                    set("subcategory", e.target.value || undefined)
+                  }
+                  className="w-full border-b border-line bg-transparent py-2 text-sm uppercase tracking-tight outline-none focus:border-ink"
+                >
+                  {subs.map((s) => (
+                    <option key={s.slug} value={s.slug}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
             <Field label="Client">
               <input
                 value={draft.client}

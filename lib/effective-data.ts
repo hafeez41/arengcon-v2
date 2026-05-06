@@ -19,6 +19,7 @@ function adminProjectToProject(p: AdminProject): Project {
     location: p.location,
     year: p.year,
     category: p.category,
+    subcategory: p.subcategory,
     status: p.status,
     size: p.size,
     summary: p.summary,
