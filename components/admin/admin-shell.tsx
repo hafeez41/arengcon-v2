@@ -10,7 +10,7 @@ import { LoginScreen } from "./login-screen";
 import { Logo } from "../logo";
 import { ThemeProvider, useTheme } from "../theme-provider";
 import { useAdminData } from "@/lib/admin-store";
-import { isAuthed, setAuthed } from "@/lib/auth-store";
+import { isAuthed, signOut } from "@/lib/auth-store";
 
 const TABS = [
   { key: "projects", label: "Projects" },
@@ -52,8 +52,8 @@ function AdminInner() {
     return <LoginScreen onSuccess={() => setSignedIn(true)} />;
   }
 
-  const onSignOut = () => {
-    setAuthed(false);
+  const onSignOut = async () => {
+    await signOut();
     setSignedIn(false);
     setTab("projects");
   };
@@ -87,7 +87,7 @@ function AdminInner() {
 
       <footer className="border-t border-line">
         <div className="mx-auto w-full max-w-[1400px] px-5 py-6 text-[10px] uppercase tracking-[0.14em] text-muted md:px-8">
-          Stored locally in this browser · Same device for all edits
+          Arengcon Admin
         </div>
       </footer>
     </div>

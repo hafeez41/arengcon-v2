@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { getAdminEmail, updateAdminCreds, setAuthed } from "@/lib/auth-store";
+import { getAdminEmail, updateAdminCreds, signOut } from "@/lib/auth-store";
 
 export function SettingsSection({ onSignOut }: { onSignOut: () => void }) {
   const [currentEmail, setCurrentEmail] = useState("");
@@ -69,8 +69,8 @@ export function SettingsSection({ onSignOut }: { onSignOut: () => void }) {
     }
   };
 
-  const onSignOutClick = () => {
-    setAuthed(false);
+  const onSignOutClick = async () => {
+    await signOut();
     onSignOut();
   };
 
