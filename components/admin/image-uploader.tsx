@@ -4,6 +4,18 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { compressImage } from "@/lib/image-compress";
 
+async function uploadToBlob(file: File): Promise<string> {
+  const compressed = await compressImage(file);
+  const res = await fetch(compressed);
+  const blob = await res.blob();
+  const form = new FormData();
+  form.append("file", new File([blob], `${Date.now()}.jpg`, { type: "image/jpeg" }));
+  const uploadRes = await fetch("/api/admin/upload", { method: "POST", body: form });
+  if (!uploadRes.ok) throw new Error("Upload failed");
+  const { url } = await uploadRes.json();
+  return url as string;
+}
+
 export function ImageUploader({
   label,
   value,
@@ -12,7 +24,7 @@ export function ImageUploader({
 }: {
   label: string;
   value: string | undefined;
-  onChange: (dataUrl: string | undefined) => void;
+  onChange: (url: string | undefined) => void;
   required?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -23,8 +35,8 @@ export function ImageUploader({
     setError(null);
     setBusy(true);
     try {
-      const compressed = await compressImage(file);
-      onChange(compressed);
+      const url = await uploadToBlob(file);
+      onChange(url);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed");
     } finally {
@@ -54,7 +66,7 @@ export function ImageUploader({
           <Image src={value} alt={label} fill sizes="320px" className="object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-[0.18em] text-ink/40">
-            {busy ? "Compressing…" : "No image"}
+            {busy ? "Uploading…" : "No image"}
           </div>
         )}
         <button
@@ -106,11 +118,11 @@ export function GalleryUploader({
     try {
       const slots = max - values.length;
       const list = Array.from(files).slice(0, slots);
-      const compressed: string[] = [];
+      const urls: string[] = [];
       for (const f of list) {
-        compressed.push(await compressImage(f));
+        urls.push(await uploadToBlob(f));
       }
-      onChange([...values, ...compressed]);
+      onChange([...values, ...urls]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed");
     } finally {
@@ -134,12 +146,12 @@ export function GalleryUploader({
           disabled={busy || values.length >= max}
           className="text-[10px] uppercase tracking-[0.18em] text-ink/65 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {busy ? "Compressing…" : values.length >= max ? "Full" : "Add"}
+          {busy ? "Uploading…" : values.length >= max ? "Full" : "Add"}
         </button>
       </div>
       <div className="grid grid-cols-3 gap-2 md:grid-cols-6">
         {values.map((src, i) => (
-          <div key={`${i}-${src.slice(0, 32)}`} className="relative aspect-[4/3] overflow-hidden border border-line bg-ink/5">
+          <div key={`${i}-${src.slice(-16)}`} className="relative aspect-[4/3] overflow-hidden border border-line bg-ink/5">
             <Image src={src} alt={`gallery ${i + 1}`} fill sizes="160px" className="object-cover" />
             <button
               type="button"

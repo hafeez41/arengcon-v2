@@ -8,6 +8,8 @@
     "start": "next start"
   },
   "dependencies": {
+    "@upstash/redis": "^1.38.0",
+    "@vercel/blob": "^2.3.3",
     "clsx": "2.1.1",
     "framer-motion": "11.18.2",
     "lenis": "1.1.20",

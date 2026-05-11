@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { idbGet, idbSet } from "./idb";
 import type { Category } from "./projects";
 
 export type AdminProject = {
@@ -59,12 +58,6 @@ export const DEFAULT_CONTACT: AdminContact = {
   social: {},
 };
 
-const KEYS = {
-  projects: "admin:projects",
-  updates: "admin:updates",
-  contact: "admin:contact",
-} as const;
-
 type Listener = () => void;
 
 const listeners = new Set<Listener>();
@@ -80,64 +73,17 @@ let cache: {
   loaded?: boolean;
 } = {};
 
-function migrateContact(raw: unknown): AdminContact | null {
-  if (!raw || typeof raw !== "object") return null;
-  const r = raw as Record<string, unknown>;
-  // New shape already
-  if (Array.isArray(r.emails) && Array.isArray(r.phones) && r.office && r.social) {
-    return r as unknown as AdminContact;
-  }
-  // Old shape: { email: string, offices: [{ city, address, email, phone }] }
-  if (typeof r.email === "string" || Array.isArray(r.offices)) {
-    const offices = (r.offices as Array<Record<string, string>> | undefined) ?? [];
-    const emails = [r.email as string, ...offices.map((o) => o?.email)]
-      .filter((e): e is string => !!e && /@/.test(e));
-    const phones = offices
-      .map((o) => o?.phone)
-      .filter((p): p is string => !!p);
-    const first = offices[0];
-    return {
-      emails: emails.length ? Array.from(new Set(emails)) : [],
-      phones: phones.length ? phones : [],
-      office: {
-        location: first?.city ?? "",
-        hours: "",
-      },
-      social: {},
-    };
-  }
-  return null;
-}
-
 async function ensureLoaded() {
   if (cache.loaded) return;
-  const [projects, updates, contactRaw] = await Promise.all([
-    idbGet<AdminProject[]>(KEYS.projects),
-    idbGet<AdminUpdate[]>(KEYS.updates),
-    idbGet<unknown>(KEYS.contact),
+  const [projects, updates, contact] = await Promise.all([
+    fetch("/api/admin/projects").then((r) => (r.ok ? r.json() : [])),
+    fetch("/api/admin/updates").then((r) => (r.ok ? r.json() : [])),
+    fetch("/api/admin/contact").then((r) => (r.ok ? r.json() : null)),
   ]);
   cache.projects = projects ?? [];
   cache.updates = updates ?? [];
-  cache.contact = migrateContact(contactRaw);
+  cache.contact = contact;
   cache.loaded = true;
-}
-
-async function persistProjects(items: AdminProject[]) {
-  cache.projects = items;
-  await idbSet(KEYS.projects, items);
-  notify();
-}
-
-async function persistUpdates(items: AdminUpdate[]) {
-  cache.updates = items;
-  await idbSet(KEYS.updates, items);
-  notify();
-}
-
-async function persistContact(value: AdminContact | null) {
-  cache.contact = value;
-  await idbSet(KEYS.contact, value);
-  notify();
 }
 
 export async function listProjects(): Promise<AdminProject[]> {
@@ -159,33 +105,71 @@ export async function upsertProject(p: AdminProject) {
   await ensureLoaded();
   const list = (cache.projects ?? []).slice();
   const idx = list.findIndex((x) => x.id === p.id);
-  if (idx >= 0) list[idx] = p;
-  else list.unshift(p);
-  await persistProjects(list);
+  if (idx >= 0) {
+    await fetch(`/api/admin/projects/${p.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(p),
+    });
+    list[idx] = p;
+  } else {
+    await fetch("/api/admin/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(p),
+    });
+    list.unshift(p);
+  }
+  cache.projects = list;
+  notify();
 }
 
 export async function deleteProject(id: string) {
   await ensureLoaded();
-  await persistProjects((cache.projects ?? []).filter((p) => p.id !== id));
+  await fetch(`/api/admin/projects/${id}`, { method: "DELETE" });
+  cache.projects = (cache.projects ?? []).filter((p) => p.id !== id);
+  notify();
 }
 
 export async function upsertUpdate(u: AdminUpdate) {
   await ensureLoaded();
   const list = (cache.updates ?? []).slice();
   const idx = list.findIndex((x) => x.id === u.id);
-  if (idx >= 0) list[idx] = u;
-  else list.unshift(u);
-  await persistUpdates(list);
+  if (idx >= 0) {
+    await fetch(`/api/admin/updates/${u.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(u),
+    });
+    list[idx] = u;
+  } else {
+    await fetch("/api/admin/updates", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(u),
+    });
+    list.unshift(u);
+  }
+  cache.updates = list;
+  notify();
 }
 
 export async function deleteUpdate(id: string) {
   await ensureLoaded();
-  await persistUpdates((cache.updates ?? []).filter((u) => u.id !== id));
+  await fetch(`/api/admin/updates/${id}`, { method: "DELETE" });
+  cache.updates = (cache.updates ?? []).filter((u) => u.id !== id);
+  notify();
 }
 
 export async function setContact(value: AdminContact | null) {
   await ensureLoaded();
-  await persistContact(value);
+  await fetch("/api/admin/contact", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(value),
+  });
+  cache.contact = value;
+  notify();
 }
 
 function subscribe(fn: Listener): () => void {
