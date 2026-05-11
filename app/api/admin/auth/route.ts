@@ -1,24 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createHash, randomUUID } from "crypto";
+import { randomUUID } from "crypto";
 import { redis, RKEYS } from "@/lib/redis";
 import { COOKIE_NAME, SESSION_TTL } from "@/lib/session";
-
-const DEFAULT_EMAIL = "guyworking2@gmail.com";
-const DEFAULT_PASSWORD = "pass123";
-
-type StoredCreds = { email: string; hash: string };
-
-function hash(p: string) {
-  return createHash("sha256").update(p).digest("hex");
-}
-
-async function getCreds(): Promise<StoredCreds> {
-  const stored = await redis.get<StoredCreds>(RKEYS.credentials);
-  if (stored) return stored;
-  const fresh: StoredCreds = { email: DEFAULT_EMAIL, hash: hash(DEFAULT_PASSWORD) };
-  await redis.set(RKEYS.credentials, fresh);
-  return fresh;
-}
+import { hashPassword, getAdminCreds } from "@/lib/auth-utils";
 
 export async function GET(req: NextRequest) {
   const token = req.cookies.get(COOKIE_NAME)?.value;
@@ -39,12 +23,9 @@ export async function POST(req: NextRequest) {
   }
 
   const { email, password } = body as { email: string; password: string };
-  const creds = await getCreds();
+  const creds = await getAdminCreds();
 
-  if (
-    email.trim().toLowerCase() !== creds.email.toLowerCase() ||
-    hash(password) !== creds.hash
-  ) {
+  if (!creds || email.trim().toLowerCase() !== creds.email.toLowerCase() || hashPassword(password) !== creds.hash) {
     return NextResponse.json({ ok: false, error: "Invalid email or password" });
   }
 

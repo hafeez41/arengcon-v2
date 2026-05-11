@@ -7,6 +7,7 @@ export async function POST(req: NextRequest) {
   const form = await req.formData();
   const file = form.get("file") as File | null;
   if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
+  if (!file.type.startsWith("image/")) return NextResponse.json({ error: "Only image files are allowed" }, { status: 400 });
   const blob = await put(`arengcon/${Date.now()}-${file.name}`, file, { access: "public" });
   return NextResponse.json({ url: blob.url });
 }

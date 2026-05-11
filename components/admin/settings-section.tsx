@@ -43,8 +43,8 @@ export function SettingsSection({ onSignOut }: { onSignOut: () => void }) {
       setMessage({ kind: "err", text: "New passwords don't match." });
       return;
     }
-    if (newPassword && newPassword.length < 4) {
-      setMessage({ kind: "err", text: "New password is too short." });
+    if (newPassword && newPassword.length < 8) {
+      setMessage({ kind: "err", text: "Password must be at least 8 characters." });
       return;
     }
 
