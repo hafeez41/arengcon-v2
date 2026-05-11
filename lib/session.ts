@@ -8,5 +8,5 @@ export async function checkSession(req: NextRequest): Promise<boolean> {
   const token = req.cookies.get(COOKIE_NAME)?.value;
   if (!token) return false;
   const val = await redis.get(RKEYS.session(token));
-  return val === "1";
+  return val !== null;
 }

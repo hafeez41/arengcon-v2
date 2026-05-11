@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   const token = req.cookies.get(COOKIE_NAME)?.value;
   if (!token) return NextResponse.json({ ok: false });
   const val = await redis.get(RKEYS.session(token));
-  return NextResponse.json({ ok: val === "1" });
+  return NextResponse.json({ ok: val !== null });
 }
 
 export async function POST(req: NextRequest) {
