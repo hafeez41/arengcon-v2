@@ -10,7 +10,7 @@ import { LoginScreen } from "./login-screen";
 import { Logo } from "../logo";
 import { ThemeProvider, useTheme } from "../theme-provider";
 import { useAdminData } from "@/lib/admin-store";
-import { isAuthed, signOut } from "@/lib/auth-store";
+import { isAuthed, setAuthed, signOut } from "@/lib/auth-store";
 
 const TABS = [
   { key: "projects", label: "Projects" },
@@ -36,8 +36,21 @@ function AdminInner() {
   const { loaded, projects, updates, contact } = useAdminData();
 
   useEffect(() => {
-    setSignedIn(isAuthed());
-    setAuthReady(true);
+    if (!isAuthed()) {
+      setAuthReady(true);
+      return;
+    }
+    fetch("/api/admin/auth")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.ok) {
+          setSignedIn(true);
+        } else {
+          setAuthed(false);
+        }
+      })
+      .catch(() => setAuthed(false))
+      .finally(() => setAuthReady(true));
   }, []);
 
   if (!authReady) {
