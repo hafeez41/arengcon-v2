@@ -28,6 +28,9 @@ export default {
       maxWidth: {
         prose: "62ch",
       },
+      screens: {
+        desk: "1400px",
+      },
     },
   },
   plugins: [],
