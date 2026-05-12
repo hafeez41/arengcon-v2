@@ -14,9 +14,9 @@ export function HomeView({
 } = {}) {
   return (
     <>
-      <div className="h-[72px] md:h-[120px]" aria-hidden />
-      <section className="pb-24 md:pb-32">
-        <div className="pt-12 md:pt-16">
+      <div className="h-[72px] lg:h-[120px]" aria-hidden />
+      <section className="pb-24 lg:pb-32">
+        <div className="pt-12 lg:pt-16">
           {filter === "updates" ? (
             <UpdatesList />
           ) : (

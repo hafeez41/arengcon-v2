@@ -49,7 +49,7 @@ export function ProjectsList({
   const filterKey = subcategory ? `${filter}/${subcategory}` : `${filter}`;
 
   return (
-    <ul className="flex flex-col gap-y-24 md:gap-y-32">
+    <ul className="flex flex-col gap-y-24 lg:gap-y-32">
       <AnimatePresence mode="popLayout" initial={true}>
         {filtered.map((p) => (
           <motion.li
@@ -105,15 +105,15 @@ function ProjectRow({
         className={clsx(
           "flex items-start",
           expanded
-            ? "w-max gap-6 px-5 pb-4 md:gap-10 md:pl-[220px] md:pr-12"
-            : "mx-auto max-w-[1100px] flex-col gap-4 px-5 md:flex-row md:gap-10 md:px-8",
+            ? "w-max gap-6 px-5 pb-4 lg:gap-10 lg:pl-[220px] lg:pr-12"
+            : "mx-auto max-w-[1100px] flex-col gap-4 px-5 lg:flex-row lg:gap-10 lg:px-8",
         )}
       >
         {/* Title block */}
         <motion.div
           layout
           transition={{ layout: FLOAT }}
-          className={clsx("shrink-0", expanded ? "w-[260px] md:w-[280px]" : "w-full md:w-[280px]")}
+          className={clsx("shrink-0", expanded ? "w-[260px] lg:w-[280px]" : "w-full lg:w-[280px]")}
         >
           <button
             type="button"
@@ -122,7 +122,7 @@ function ProjectRow({
             aria-expanded={expanded}
           >
             <Pictogram project={project} />
-            <h3 className="mt-5 text-[17px] leading-[1.25] tracking-tight md:text-[18px]">
+            <h3 className="mt-5 text-[17px] leading-[1.25] tracking-tight lg:text-[18px]">
               {project.title}
             </h3>
             <div className="mt-2 text-[10.5px] uppercase tracking-[0.14em] text-muted">
@@ -162,7 +162,7 @@ function ProjectRow({
           onClick={onClick}
           className={clsx(
             "group block shrink-0",
-            expanded ? "w-[480px] md:w-[600px]" : "w-full md:w-[480px]",
+            expanded ? "w-[480px] lg:w-[600px]" : "w-full lg:w-[480px]",
           )}
           aria-label={`${expanded ? "Collapse" : "Expand"} ${project.title}`}
         >
@@ -175,7 +175,7 @@ function ProjectRow({
               src={project.image}
               alt={project.title}
               fill
-              sizes="(max-width: 768px) 100vw, 600px"
+              sizes="(max-width: 1024px) 100vw, 600px"
               className="object-cover transition-transform duration-[1.2s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.02]"
             />
           </motion.div>
@@ -217,7 +217,7 @@ function ProjectRow({
               transition={{ ...FLOAT, delay: 0.18 + i * 0.06 }}
               className="shrink-0"
             >
-              <div className="relative aspect-[4/3] w-[440px] overflow-hidden bg-ink/[0.04] md:w-[540px]">
+              <div className="relative aspect-[4/3] w-[440px] overflow-hidden bg-ink/[0.04] lg:w-[540px]">
                 <SmartImage
                   src={src}
                   alt={`${project.title} ${i + 2}`}
@@ -239,10 +239,10 @@ function ProjectRow({
               ...FLOAT,
               delay: 0.18 + galleryRest.length * 0.06,
             }}
-            className="flex aspect-[4/3] w-[440px] shrink-0 items-center justify-center bg-ink p-10 text-paper md:w-[540px] md:p-14"
+            className="flex aspect-[4/3] w-[440px] shrink-0 items-center justify-center bg-ink p-10 text-paper lg:w-[540px] lg:p-14"
           >
             <blockquote className="max-w-[32ch]">
-              <p className="text-[20px] leading-[1.3] tracking-tight md:text-[24px]">
+              <p className="text-[20px] leading-[1.3] tracking-tight lg:text-[24px]">
                 The drawings matched the steel — we came in with a brief and
                 walked out with a building the brief never asked for.
               </p>
@@ -254,7 +254,7 @@ function ProjectRow({
         )}
 
         {/* End-of-track padding so last panel doesn't kiss the edge */}
-        {expanded && <div aria-hidden className="w-12 shrink-0 md:w-24" />}
+        {expanded && <div aria-hidden className="w-12 shrink-0 lg:w-24" />}
       </motion.div>
     </div>
   );

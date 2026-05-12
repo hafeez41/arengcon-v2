@@ -113,26 +113,26 @@ export function Header() {
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-40 bg-paper/95 backdrop-blur">
-        <div className="relative mx-auto flex w-full items-center justify-between gap-4 px-5 py-4 md:px-8 md:py-5">
+        <div className="relative mx-auto flex w-full items-center justify-between gap-4 px-5 py-4 lg:px-8 lg:py-5">
           <a
             href="/"
             onClick={go("/")}
             aria-label="Arengcon home"
-            className="flex items-center gap-2.5 md:gap-4"
+            className="flex items-center gap-2.5 lg:gap-4"
           >
             {introDone ? (
               <motion.div
                 layoutId="brand-mark"
                 transition={{ layout: MORPH }}
-                className="flex items-center gap-2.5 md:gap-4"
+                className="flex items-center gap-2.5 lg:gap-4"
               >
-                <Logo className="h-9 w-9 md:h-16 md:w-16" priority />
-                <span className="font-bank text-[18px] font-medium uppercase leading-none tracking-[0.04em] md:text-[42px]">
+                <Logo className="h-9 w-9 lg:h-16 lg:w-16" priority />
+                <span className="font-bank text-[18px] font-medium uppercase leading-none tracking-[0.04em] lg:text-[42px]">
                   Arengcon
                 </span>
               </motion.div>
             ) : (
-              <span aria-hidden className="block h-9 w-[120px] md:h-16 md:w-[260px]" />
+              <span aria-hidden className="block h-9 w-[120px] lg:h-16 lg:w-[260px]" />
             )}
           </a>
 
@@ -151,11 +151,11 @@ export function Header() {
             >
               <ThemeIcon dark={theme === "dark"} />
             </button>
-            {/* Hamburger — mobile only */}
+            {/* Hamburger — shown below lg: (mobile + all tablets) */}
             <button
               onClick={() => setDrawerOpen(true)}
               aria-label="Open navigation"
-              className="grid h-9 w-9 place-items-center rounded-full transition-colors duration-200 hover:bg-ink/[0.06] md:hidden"
+              className="grid h-9 w-9 place-items-center rounded-full transition-colors duration-200 hover:bg-ink/[0.06] lg:hidden"
             >
               <HamburgerIcon />
             </button>
@@ -163,8 +163,8 @@ export function Header() {
         </div>
       </header>
 
-      {/* Desktop side rail */}
-      <aside className="pointer-events-none fixed left-6 top-[200px] z-40 hidden md:block md:left-12">
+      {/* Desktop side rail — only at lg: and above */}
+      <aside className="pointer-events-none fixed left-6 top-[200px] z-40 hidden lg:block lg:left-12">
         <ul className="flex flex-col">
           {FILTERS.map((f) => {
             const isActive = active === f.key;
@@ -244,7 +244,7 @@ export function Header() {
         </ul>
       </aside>
 
-      {/* Mobile nav drawer */}
+      {/* Mobile/tablet nav drawer — hidden at lg: and above */}
       <AnimatePresence>
         {drawerOpen && (
           <>
@@ -254,7 +254,7 @@ export function Header() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-[60] bg-ink/25 md:hidden"
+              className="fixed inset-0 z-[60] bg-ink/25 lg:hidden"
               onClick={() => setDrawerOpen(false)}
             />
             <motion.nav
@@ -263,7 +263,7 @@ export function Header() {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 280 }}
-              className="fixed left-0 top-0 z-[70] flex h-full w-72 flex-col bg-paper px-8 py-8 md:hidden"
+              className="fixed left-0 top-0 z-[70] flex h-full w-72 flex-col bg-paper px-8 py-8 lg:hidden"
             >
               <button
                 onClick={() => setDrawerOpen(false)}
