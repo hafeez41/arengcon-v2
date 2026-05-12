@@ -103,17 +103,17 @@ function ProjectRow({
         layout
         transition={{ layout: FLOAT }}
         className={clsx(
-          "flex items-start gap-6 md:gap-10",
+          "flex items-start",
           expanded
-            ? "w-max px-5 pb-4 md:pl-[220px] md:pr-12"
-            : "mx-auto max-w-[1100px] px-5 md:px-8",
+            ? "w-max gap-6 px-5 pb-4 md:gap-10 md:pl-[220px] md:pr-12"
+            : "mx-auto max-w-[1100px] flex-col gap-4 px-5 md:flex-row md:gap-10 md:px-8",
         )}
       >
         {/* Title block */}
         <motion.div
           layout
           transition={{ layout: FLOAT }}
-          className="w-[260px] shrink-0 md:w-[280px]"
+          className={clsx("shrink-0", expanded ? "w-[260px] md:w-[280px]" : "w-full md:w-[280px]")}
         >
           <button
             type="button"
@@ -162,9 +162,7 @@ function ProjectRow({
           onClick={onClick}
           className={clsx(
             "group block shrink-0",
-            expanded
-              ? "w-[480px] md:w-[600px]"
-              : "w-[420px] md:w-[480px]",
+            expanded ? "w-[480px] md:w-[600px]" : "w-full md:w-[480px]",
           )}
           aria-label={`${expanded ? "Collapse" : "Expand"} ${project.title}`}
         >

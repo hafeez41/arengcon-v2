@@ -64,15 +64,6 @@ export function parseRouteFilter(path: string): RouteFilter {
   return { category: cat };
 }
 
-function labelFor(f: FilterKey): string {
-  if (f === "arch") return "Architecture";
-  if (f === "int") return "Interiors";
-  if (f === "cons") return "Construction";
-  if (f === "land") return "Landscaping";
-  if (f === "updates") return "Updates";
-  return "All work";
-}
-
 export function Header() {
   const path = useRouterPath();
   const { category: active, subcategory: activeSub } = parseRouteFilter(path);
@@ -80,12 +71,21 @@ export function Header() {
   const { theme, toggle } = useTheme();
   const introDone = useIntroDone();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerExpanded, setDrawerExpanded] = useState<FilterKey | null>(null);
 
-  // Local override so the user can manually close the active category's
-  // dropdown without changing the URL. Reset whenever the path changes.
+  // Desktop: allow manually collapsing active category's sub-tree
   const [closed, setClosed] = useState<FilterKey | null>(null);
+
   useEffect(() => {
     setClosed(null);
+    setDrawerOpen(false);
+    const { category } = parseRouteFilter(path);
+    setDrawerExpanded(
+      category !== "all" && category !== "updates" && categoryHasSubcategories(category as Category)
+        ? category
+        : null,
+    );
   }, [path]);
 
   useEffect(() => {
@@ -96,7 +96,10 @@ export function Header() {
         e.preventDefault();
         setSearchOpen(true);
       }
-      if (e.key === "Escape") setSearchOpen(false);
+      if (e.key === "Escape") {
+        setSearchOpen(false);
+        setDrawerOpen(false);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -139,18 +142,7 @@ export function Header() {
               aria-label="Search"
               className="grid h-9 w-9 place-items-center rounded-full transition-colors duration-200 hover:bg-ink/[0.06]"
             >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-              >
-                <circle cx="11" cy="11" r="7" />
-                <path d="m20 20-3.5-3.5" />
-              </svg>
+              <SearchIcon />
             </button>
             <button
               onClick={toggle}
@@ -159,30 +151,19 @@ export function Header() {
             >
               <ThemeIcon dark={theme === "dark"} />
             </button>
+            {/* Hamburger — mobile only */}
+            <button
+              onClick={() => setDrawerOpen(true)}
+              aria-label="Open navigation"
+              className="grid h-9 w-9 place-items-center rounded-full transition-colors duration-200 hover:bg-ink/[0.06] md:hidden"
+            >
+              <HamburgerIcon />
+            </button>
           </div>
         </div>
-
-        <nav className="flex items-center justify-between gap-2 overflow-x-auto px-4 pb-3 md:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {FILTERS.map((f) => (
-            <a
-              key={f.key}
-              href={f.href}
-              onClick={go(f.href)}
-              className={clsx(
-                "relative whitespace-nowrap text-[9px] uppercase tracking-[0.1em] transition-colors",
-                active === f.key ? "text-ink" : "text-muted",
-              )}
-            >
-              {f.label}
-              {active === f.key && (
-                <span className="absolute -bottom-1 left-0 right-0 h-px bg-ink" />
-              )}
-            </a>
-          ))}
-        </nav>
       </header>
 
-      {/* Desktop side rail — categories + animated subcategory tree. */}
+      {/* Desktop side rail */}
       <aside className="pointer-events-none fixed left-6 top-[200px] z-40 hidden md:block md:left-12">
         <ul className="flex flex-col">
           {FILTERS.map((f) => {
@@ -191,13 +172,10 @@ export function Header() {
               f.key !== "all" &&
               f.key !== "updates" &&
               categoryHasSubcategories(f.key as Category);
-            // Auto-show when the category is active in the URL, but allow
-            // the user to override by clicking the parent again.
             const showSubs = hasSubs && isActive && closed !== f.key;
             const onCatClick = (e: React.MouseEvent) => {
               e.preventDefault();
               if (isActive && hasSubs) {
-                // Toggle the dropdown without changing the URL.
                 setClosed((prev) => (prev === f.key ? null : f.key));
               } else {
                 setClosed(null);
@@ -217,11 +195,7 @@ export function Header() {
                   {isActive && !activeSub && (
                     <motion.span
                       layoutId="filter-rail-mark"
-                      transition={{
-                        type: "spring",
-                        stiffness: 380,
-                        damping: 32,
-                      }}
+                      transition={{ type: "spring", stiffness: 380, damping: 32 }}
                       className="absolute -left-5 block h-[2px] w-3 bg-ink"
                     />
                   )}
@@ -231,10 +205,7 @@ export function Header() {
                 {hasSubs && (
                   <motion.div
                     initial={false}
-                    animate={{
-                      height: showSubs ? "auto" : 0,
-                      opacity: showSubs ? 1 : 0,
-                    }}
+                    animate={{ height: showSubs ? "auto" : 0, opacity: showSubs ? 1 : 0 }}
                     transition={FLOAT}
                     style={{ overflow: "hidden" }}
                   >
@@ -249,19 +220,13 @@ export function Header() {
                               onClick={go(subHref)}
                               className={clsx(
                                 "pointer-events-auto relative block py-1.5 text-[11px] tracking-[0.06em] transition-colors duration-200",
-                                isSubActive
-                                  ? "text-ink"
-                                  : "text-muted/80 hover:text-ink",
+                                isSubActive ? "text-ink" : "text-muted/80 hover:text-ink",
                               )}
                             >
                               {isSubActive && (
                                 <motion.span
                                   layoutId="filter-rail-mark"
-                                  transition={{
-                                    type: "spring",
-                                    stiffness: 380,
-                                    damping: 32,
-                                  }}
+                                  transition={{ type: "spring", stiffness: 380, damping: 32 }}
                                   className="absolute -left-[21px] top-1/2 block h-[2px] w-2.5 -translate-y-1/2 bg-ink"
                                 />
                               )}
@@ -279,8 +244,162 @@ export function Header() {
         </ul>
       </aside>
 
+      {/* Mobile nav drawer */}
+      <AnimatePresence>
+        {drawerOpen && (
+          <>
+            <motion.div
+              key="drawer-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-[60] bg-ink/25 md:hidden"
+              onClick={() => setDrawerOpen(false)}
+            />
+            <motion.nav
+              key="drawer-panel"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 280 }}
+              className="fixed left-0 top-0 z-[70] flex h-full w-72 flex-col bg-paper px-8 py-8 md:hidden"
+            >
+              <button
+                onClick={() => setDrawerOpen(false)}
+                aria-label="Close navigation"
+                className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full transition-colors duration-200 hover:bg-ink/[0.06]"
+              >
+                <XIcon />
+              </button>
+
+              <div className="mb-10 mt-2">
+                <span className="font-bank text-[13px] font-medium uppercase tracking-[0.14em] text-muted">
+                  Navigation
+                </span>
+              </div>
+
+              <ul className="flex flex-col">
+                {FILTERS.map((f) => {
+                  const isActive = active === f.key;
+                  const hasSubs =
+                    f.key !== "all" &&
+                    f.key !== "updates" &&
+                    categoryHasSubcategories(f.key as Category);
+                  const isOpen = drawerExpanded === f.key;
+
+                  return (
+                    <li key={f.key}>
+                      <button
+                        onClick={() => {
+                          if (hasSubs) {
+                            setDrawerExpanded(isOpen ? null : f.key);
+                            if (!isActive) navigate(f.href);
+                          } else {
+                            navigate(f.href);
+                            setDrawerOpen(false);
+                          }
+                        }}
+                        className={clsx(
+                          "flex w-full items-center justify-between py-3.5 text-left text-[12.5px] font-medium uppercase tracking-[0.18em] transition-colors duration-200",
+                          isActive ? "text-ink" : "text-muted hover:text-ink",
+                        )}
+                      >
+                        <span className="relative pl-5">
+                          {isActive && (
+                            <span className="absolute left-0 top-1/2 block h-[2px] w-2.5 -translate-y-1/2 bg-ink" />
+                          )}
+                          {f.label}
+                        </span>
+                        {hasSubs && (
+                          <motion.span
+                            animate={{ rotate: isOpen ? 90 : 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="shrink-0 text-muted"
+                          >
+                            <ChevronRightIcon />
+                          </motion.span>
+                        )}
+                      </button>
+
+                      {hasSubs && (
+                        <motion.div
+                          initial={false}
+                          animate={{ height: isOpen ? "auto" : 0, opacity: isOpen ? 1 : 0 }}
+                          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                          style={{ overflow: "hidden" }}
+                        >
+                          <ul className="mb-2 ml-5 border-l border-line/60 pl-4">
+                            {SUBCATEGORIES[f.key as Category].map((sub) => {
+                              const isSubActive = activeSub === sub.slug;
+                              const subHref = `${f.href}/${sub.slug}`;
+                              return (
+                                <li key={sub.slug}>
+                                  <a
+                                    href={subHref}
+                                    onClick={(e) => {
+                                      go(subHref)(e);
+                                      setDrawerOpen(false);
+                                    }}
+                                    className={clsx(
+                                      "block py-2 text-[11px] tracking-[0.06em] transition-colors duration-200",
+                                      isSubActive ? "text-ink" : "text-muted/80 hover:text-ink",
+                                    )}
+                                  >
+                                    {sub.label}
+                                  </a>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </motion.div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </motion.nav>
+          </>
+        )}
+      </AnimatePresence>
+
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
+  );
+}
+
+function HamburgerIcon() {
+  return (
+    <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor" aria-hidden>
+      <rect width="16" height="1.5" rx="0.75" />
+      <rect y="4.75" width="16" height="1.5" rx="0.75" />
+      <rect y="9.5" width="16" height="1.5" rx="0.75" />
+    </svg>
+  );
+}
+
+function XIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
+      <path d="M18 6L6 18M6 6l12 12" />
+    </svg>
+  );
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="m9 18 6-6-6-6" />
+    </svg>
   );
 }
 
