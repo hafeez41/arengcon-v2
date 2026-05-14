@@ -9,7 +9,7 @@ async function uploadToBlob(file: File): Promise<string> {
   const res = await fetch(compressed);
   const blob = await res.blob();
   const form = new FormData();
-  form.append("file", new File([blob], `${Date.now()}.jpg`, { type: "image/jpeg" }));
+  form.append("file", new File([blob], `${Date.now()}.webp`, { type: "image/webp" }));
   const uploadRes = await fetch("/api/admin/upload", { method: "POST", body: form });
   if (!uploadRes.ok) throw new Error("Upload failed");
   const { url } = await uploadRes.json();

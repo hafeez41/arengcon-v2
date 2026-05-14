@@ -18,6 +18,7 @@ import {
 import type { AdminProject } from "@/lib/admin-store";
 import { SIZE } from "@/lib/motion";
 import { useProjectExpanded } from "./project-expanded-context";
+import { useLenis } from "./lenis-provider";
 
 export type FilterKey = "all" | Category | "updates";
 
@@ -58,13 +59,12 @@ export function ProjectsList({
         {filtered.map((p) => (
           <motion.li
             key={`${filterKey}-${p.slug}`}
-            layout="position"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={SIZE}
           >
-            <ScrollFade>
+            <ScrollFade disabled={expanded === p.slug}>
               <ProjectRow
                 project={p}
                 expanded={expanded === p.slug}
@@ -95,8 +95,66 @@ function ProjectRow({
   const galleryRest = gallery.slice(1);
   const rowRef = useRef<HTMLDivElement>(null);
   const { setExpandedOverlapsRail } = useProjectExpanded();
+  const lenisRef = useLenis();
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+
+  // Click-and-drag horizontal scroll inside the expanded row.
+  // `wasDrag` tells the post-mouseup click handler to swallow the click so
+  // dragging on the image doesn't accidentally collapse the project.
+  const dragRef = useRef({ active: false, startX: 0, startScroll: 0, wasDrag: false });
+
+  const onRowMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!expanded) return;
+    const el = rowRef.current;
+    if (!el) return;
+    dragRef.current.active = true;
+    dragRef.current.wasDrag = false;
+    dragRef.current.startX = e.pageX;
+    dragRef.current.startScroll = el.scrollLeft;
+  };
+  const onRowMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!dragRef.current.active) return;
+    const el = rowRef.current;
+    if (!el) return;
+    const delta = e.pageX - dragRef.current.startX;
+    if (Math.abs(delta) > 4) dragRef.current.wasDrag = true;
+    el.scrollLeft = dragRef.current.startScroll - delta;
+  };
+  const onRowMouseEnd = () => {
+    dragRef.current.active = false;
+  };
+  const onRowClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (dragRef.current.wasDrag) {
+      e.preventDefault();
+      e.stopPropagation();
+      dragRef.current.wasDrag = false;
+    }
+  };
+
+  // Smoothly carry the page to the row when it expands. Wrapped in a tiny
+  // setTimeout so the row's new (taller) height has been laid out before we
+  // measure offset — that way the scroll and the height/width transition run
+  // in parallel from the same starting frame (matches BIG.dk's approach).
+  useEffect(() => {
+    if (!expanded) return;
+    const lenis = lenisRef.current;
+    const el = rowRef.current;
+    if (!lenis || !el) return;
+    const t = window.setTimeout(() => {
+      const vh = window.innerHeight;
+      const elTop = el.getBoundingClientRect().top + window.scrollY;
+      // Settle the row top ~12vh below the viewport top so the image lands
+      // with symmetric breathing above and below.
+      const headerOffset = window.innerWidth >= 1400 ? 0.12 * vh - 60 : 72;
+      const target = Math.max(0, elTop - headerOffset);
+      lenis.scrollTo(target, {
+        duration: 0.78,
+        easing: (k: number) => 1 - Math.pow(1 - k, 3),
+      });
+    }, 10);
+    return () => window.clearTimeout(t);
+  }, [expanded, lenisRef]);
 
   // Update arrow visibility based on horizontal scroll position of the row.
   useEffect(() => {
@@ -164,29 +222,30 @@ function ProjectRow({
     <div
       ref={rowRef}
       data-lenis-prevent={expanded ? "" : undefined}
+      onMouseDown={onRowMouseDown}
+      onMouseMove={onRowMouseMove}
+      onMouseUp={onRowMouseEnd}
+      onMouseLeave={onRowMouseEnd}
+      onClickCapture={onRowClickCapture}
       className={clsx(
-        "w-full",
+        "w-full select-none",
         expanded
-          ? "overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden desk:h-[calc(100vh_-_120px)]"
+          ? "overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing [&_img]:pointer-events-none"
           : "overflow-visible",
       )}
     >
-      <motion.div
-        layout
-        transition={{ layout: SIZE }}
+      <div
         className={clsx(
-          "flex",
+          "flex transition-[gap,padding] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
           expanded
-            ? "items-stretch desk:h-full desk:gap-6"
+            ? "items-start desk:gap-6 pl-[7.5vw] desk:pl-0 desk:py-[12vh]"
             : "mx-auto max-w-[1100px] flex-col gap-4 px-5 items-start desk:flex-row desk:gap-10 desk:px-8",
         )}
       >
         {/* Sidebar */}
-        <motion.div
-          layout
-          transition={{ layout: SIZE }}
+        <div
           className={clsx(
-            "shrink-0",
+            "shrink-0 transition-[width] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
             expanded
               ? "px-5 pt-6 pb-2 desk:w-[200px] desk:overflow-y-auto desk:px-8 desk:py-6"
               : "w-full desk:w-[280px]",
@@ -228,30 +287,21 @@ function ProjectRow({
               </dl>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Main image — fills the viewport width minus sidebar on desktop */}
-        <motion.button
-          layout
-          transition={{ layout: SIZE }}
+        {/* Main image (no framer layout — was conflicting with order classes) */}
+        <button
           type="button"
           onClick={onClick}
           className={clsx(
-            "group block",
+            "group block shrink-0 transition-[width,height,max-width] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
             expanded
-              ? "shrink-0 w-[85vw] desk:w-[calc(100%_-_528px)] desk:h-full"
-              : "shrink-0 w-full desk:w-[560px]",
+              ? "w-[85vw] h-[64vw] desk:w-[114vh] desk:max-w-[calc(100%_-_528px)] desk:h-[76vh] order-first desk:order-none"
+              : "w-full desk:w-[560px] desk:h-[420px] desk:max-w-none",
           )}
           aria-label={`${expanded ? "Collapse" : "Expand"} ${project.title}`}
         >
-          <motion.div
-            layout
-            transition={{ layout: SIZE }}
-            className={clsx(
-              "relative w-full overflow-hidden bg-ink/[0.04]",
-              expanded ? "h-[64vw] desk:h-full" : "aspect-[4/3]",
-            )}
-          >
+          <div className="relative w-full h-full overflow-hidden bg-ink/[0.04] aspect-[4/3]">
             <SmartImage
               src={project.image}
               alt={project.title}
@@ -259,8 +309,8 @@ function ProjectRow({
               sizes="(max-width: 1400px) 85vw, calc(100vw - 530px)"
               className="object-cover transition-transform duration-[1.2s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.02]"
             />
-          </motion.div>
-        </motion.button>
+          </div>
+        </button>
 
         {/* Description — CSS-driven width transition (compositor thread, no JS layout) */}
         <div
@@ -290,9 +340,9 @@ function ProjectRow({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 60 }}
               transition={{ ...SIZE, delay: 0.18 + i * 0.06 }}
-              className="shrink-0"
+              className="shrink-0 desk:self-center"
             >
-              <div className="relative aspect-[4/3] w-[85vw] overflow-hidden bg-ink/[0.04] desk:aspect-auto desk:h-full desk:w-[calc(100vw-200px)]">
+              <div className="relative w-[85vw] h-[64vw] overflow-hidden bg-ink/[0.04] desk:w-[114vh] desk:max-w-[calc(100vw_-_528px)] desk:h-[76vh]">
                 <SmartImage
                   src={src}
                   alt={`${project.title} ${i + 2}`}
@@ -311,7 +361,7 @@ function ProjectRow({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 60 }}
             transition={{ ...SIZE, delay: 0.18 + galleryRest.length * 0.06 }}
-            className="flex aspect-[4/3] w-[85vw] shrink-0 items-center justify-center bg-ink p-10 text-paper desk:aspect-auto desk:h-full desk:w-[calc(100vw-200px)] desk:p-14"
+            className="flex w-[85vw] h-[64vw] shrink-0 items-center justify-center bg-ink p-10 text-paper desk:w-[114vh] desk:max-w-[calc(100vw_-_528px)] desk:h-[76vh] desk:p-14"
           >
             <blockquote className="max-w-[32ch]">
               <p className="text-[20px] leading-[1.3] tracking-tight desk:text-[24px]">
@@ -326,7 +376,7 @@ function ProjectRow({
         )}
 
         {expanded && <div aria-hidden className="w-10 shrink-0 desk:w-20" />}
-      </motion.div>
+      </div>
     </div>
 
     {/* Click-to-scroll chevrons (desk only; touch users already have native swipe) */}

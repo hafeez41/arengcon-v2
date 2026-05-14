@@ -1,17 +1,30 @@
 "use client";
 
 import Lenis from "lenis";
-import { useEffect, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  type ReactNode,
+  type RefObject,
+} from "react";
+
+type LenisCtx = { lenisRef: RefObject<Lenis | null> };
+const Ctx = createContext<LenisCtx>({ lenisRef: { current: null } });
+
+export function useLenis() {
+  return useContext(Ctx).lenisRef;
+}
 
 /**
- * Global smooth-scroll layer. Tuned for "slow and weighted" — wheelMultiplier
- * under 1 means each tick travels slightly LESS than native, then glides to
- * settle. Cubic ease-out lands soft. No JS scrollTo-on-expand (intentionally).
- *
- * Mark any nested overflow-x-auto / overflow-y-auto scroller with
- * `data-lenis-prevent` so Lenis hands wheel events back to native there.
+ * Global smooth-scroll layer. Slow and weighted feel.
+ * Mark any nested overflow-x/y scroller with `data-lenis-prevent` so Lenis
+ * hands wheel events back to native there.
  */
 export function LenisProvider({ children }: { children: ReactNode }) {
+  const lenisRef = useRef<Lenis | null>(null);
+
   useEffect(() => {
     const lenis = new Lenis({
       duration: 1.0,
@@ -21,6 +34,7 @@ export function LenisProvider({ children }: { children: ReactNode }) {
       touchMultiplier: 1.4,
       easing: (t: number) => 1 - Math.pow(1 - t, 3),
     });
+    lenisRef.current = lenis;
 
     let rafId = 0;
     const loop = (time: number) => {
@@ -32,8 +46,9 @@ export function LenisProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelAnimationFrame(rafId);
       lenis.destroy();
+      lenisRef.current = null;
     };
   }, []);
 
-  return <>{children}</>;
+  return <Ctx.Provider value={{ lenisRef }}>{children}</Ctx.Provider>;
 }

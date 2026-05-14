@@ -1,5 +1,8 @@
-const MAX_BYTES = 1024 * 1024;
-const MAX_DIM = 2000;
+// WebP at q=0.85 ≈ JPEG at q=0.92 visually, but ~30% smaller. So we can keep
+// quality high and rarely have to drop into the visibly-degraded zone.
+const MAX_BYTES = 2 * 1024 * 1024;
+const MAX_DIM = 2400;
+const MIME = "image/webp";
 
 export async function compressImage(file: File): Promise<string> {
   const dataUrl = await fileToDataUrl(file);
@@ -14,15 +17,15 @@ export async function compressImage(file: File): Promise<string> {
   if (!ctx) throw new Error("Canvas context unavailable");
   ctx.drawImage(img, 0, 0, width, height);
 
-  let quality = 0.92;
-  let out = canvas.toDataURL("image/jpeg", quality);
-  while (estimateBytes(out) > MAX_BYTES && quality > 0.4) {
-    quality -= 0.08;
-    out = canvas.toDataURL("image/jpeg", quality);
+  let quality = 0.85;
+  let out = canvas.toDataURL(MIME, quality);
+  while (estimateBytes(out) > MAX_BYTES && quality > 0.78) {
+    quality -= 0.02;
+    out = canvas.toDataURL(MIME, quality);
   }
 
   if (estimateBytes(out) > MAX_BYTES) {
-    const shrunk = await shrinkAgain(img, MAX_DIM * 0.7);
+    const shrunk = await shrinkAgain(img, Math.round(MAX_DIM * 0.8));
     if (estimateBytes(shrunk) < estimateBytes(out)) out = shrunk;
   }
 
@@ -37,11 +40,11 @@ async function shrinkAgain(img: HTMLImageElement, maxDim: number): Promise<strin
   const ctx = canvas.getContext("2d");
   if (!ctx) return "";
   ctx.drawImage(img, 0, 0, width, height);
-  let quality = 0.85;
-  let out = canvas.toDataURL("image/jpeg", quality);
-  while (estimateBytes(out) > MAX_BYTES && quality > 0.4) {
-    quality -= 0.08;
-    out = canvas.toDataURL("image/jpeg", quality);
+  let quality = 0.82;
+  let out = canvas.toDataURL(MIME, quality);
+  while (estimateBytes(out) > MAX_BYTES && quality > 0.75) {
+    quality -= 0.02;
+    out = canvas.toDataURL(MIME, quality);
   }
   return out;
 }
