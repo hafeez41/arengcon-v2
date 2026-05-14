@@ -88,7 +88,6 @@ export function IntroSplash({
             >
               <Logo
                 className="h-24 w-24 sm:h-36 sm:w-36"
-                invert
                 priority
               />
               <div className="mt-7 overflow-hidden">

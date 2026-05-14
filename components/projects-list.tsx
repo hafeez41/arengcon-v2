@@ -95,6 +95,36 @@ function ProjectRow({
   const galleryRest = gallery.slice(1);
   const rowRef = useRef<HTMLDivElement>(null);
   const { setExpandedOverlapsRail } = useProjectExpanded();
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  // Update arrow visibility based on horizontal scroll position of the row.
+  useEffect(() => {
+    if (!expanded) {
+      setCanScrollLeft(false);
+      setCanScrollRight(false);
+      return;
+    }
+    const el = rowRef.current;
+    if (!el) return;
+    const update = () => {
+      setCanScrollLeft(el.scrollLeft > 4);
+      setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+    };
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      el.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [expanded]);
+
+  const scrollByPanel = (dir: 1 | -1) => {
+    const el = rowRef.current;
+    if (!el) return;
+    el.scrollBy({ left: el.clientWidth * 0.8 * dir, behavior: "smooth" });
+  };
 
   // While expanded, track whether the row's viewport rect overlaps the side rail's zone.
   // Rail sits fixed at top:200px and grows downward — use a generous [200, 720] band.
@@ -130,6 +160,7 @@ function ProjectRow({
   }, [expanded, setExpandedOverlapsRail]);
 
   return (
+    <div className="relative">
     <div
       ref={rowRef}
       data-lenis-prevent={expanded ? "" : undefined}
@@ -297,15 +328,62 @@ function ProjectRow({
         {expanded && <div aria-hidden className="w-10 shrink-0 desk:w-20" />}
       </motion.div>
     </div>
+
+    {/* Click-to-scroll chevrons (desk only; touch users already have native swipe) */}
+    {expanded && (
+      <>
+        <button
+          type="button"
+          onClick={() => scrollByPanel(-1)}
+          aria-label="Scroll left"
+          tabIndex={canScrollLeft ? 0 : -1}
+          className={clsx(
+            "absolute left-4 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-paper/85 text-ink shadow-sm backdrop-blur transition-opacity duration-200 hover:bg-paper desk:grid",
+            canScrollLeft ? "opacity-100" : "pointer-events-none opacity-0",
+          )}
+        >
+          <ChevronIcon direction="left" />
+        </button>
+        <button
+          type="button"
+          onClick={() => scrollByPanel(1)}
+          aria-label="Scroll right"
+          tabIndex={canScrollRight ? 0 : -1}
+          className={clsx(
+            "absolute right-4 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-paper/85 text-ink shadow-sm backdrop-blur transition-opacity duration-200 hover:bg-paper desk:grid",
+            canScrollRight ? "opacity-100" : "pointer-events-none opacity-0",
+          )}
+        >
+          <ChevronIcon direction="right" />
+        </button>
+      </>
+    )}
+    </div>
+  );
+}
+
+function ChevronIcon({ direction }: { direction: "left" | "right" }) {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className={direction === "left" ? "rotate-180" : ""}
+    >
+      <path d="m9 18 6-6-6-6" />
+    </svg>
   );
 }
 
 function Pictogram() {
-  return (
-    <div className="h-9 w-9 bg-ink p-1.5">
-      <Logo className="h-full w-full" invert />
-    </div>
-  );
+  // Logo already includes its own black circle; no wrapper / no invert.
+  return <Logo className="h-9 w-9" />;
 }
 
 function Meta({ label, value }: { label: string; value: string }) {
