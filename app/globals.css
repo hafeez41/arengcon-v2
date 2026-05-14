@@ -57,21 +57,6 @@ img {
   font-variant-numeric: tabular-nums;
 }
 
-.text-balance {
-  text-wrap: balance;
-}
-
-.text-pretty {
-  text-wrap: pretty;
-}
-
-.eyebrow {
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
 .editorial-link {
   position: relative;
   display: inline;
@@ -84,10 +69,6 @@ img {
 
 .editorial-link:hover {
   background-size: 100% 1px;
-}
-
-.divider {
-  border-top: 1px solid var(--line);
 }
 
 html.dark img.logo-asset {

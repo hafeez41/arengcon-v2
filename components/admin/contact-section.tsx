@@ -9,8 +9,7 @@ import {
   SOCIAL_PLATFORMS,
   setContact,
 } from "@/lib/admin-store";
-
-const FLOAT = { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const };
+import { SIZE } from "@/lib/motion";
 
 export function ContactSection({ contact }: { contact: AdminContact | null }) {
   const [draft, setDraft] = useState<AdminContact>(contact ?? DEFAULT_CONTACT);
@@ -117,7 +116,7 @@ export function ContactSection({ contact }: { contact: AdminContact | null }) {
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
-                transition={FLOAT}
+                transition={SIZE}
                 className="text-[10px] uppercase tracking-[0.14em] text-emerald-600"
               >
                 Saved

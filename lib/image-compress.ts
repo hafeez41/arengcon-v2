@@ -75,19 +75,3 @@ function estimateBytes(dataUrl: string): number {
   const b64 = idx >= 0 ? dataUrl.slice(idx + 1) : dataUrl;
   return Math.floor((b64.length * 3) / 4);
 }
-
-export function youtubeId(url: string): string | null {
-  if (!url) return null;
-  const trimmed = url.trim();
-  const patterns = [
-    /(?:youtube\.com\/watch\?.*v=)([a-zA-Z0-9_-]{6,})/,
-    /(?:youtu\.be\/)([a-zA-Z0-9_-]{6,})/,
-    /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{6,})/,
-    /(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]{6,})/,
-  ];
-  for (const re of patterns) {
-    const m = trimmed.match(re);
-    if (m) return m[1];
-  }
-  return null;
-}

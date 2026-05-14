@@ -8,6 +8,8 @@ import { IntroProvider } from "./intro-context";
 import { ThemeProvider } from "./theme-provider";
 import { SpaRouterProvider, useRouterPath } from "./spa-router";
 import { resolveView } from "./views";
+import { ProjectExpandedProvider } from "./project-expanded-context";
+import { LenisProvider } from "./lenis-provider";
 
 export function SpaShell({ initialPath }: { initialPath: string }) {
   const [introDone, setIntroDone] = useState(false);
@@ -22,18 +24,22 @@ export function SpaShell({ initialPath }: { initialPath: string }) {
   return (
     <ThemeProvider>
       <SpaRouterProvider initialPath={initialPath}>
-        <IntroProvider done={introDone}>
-          {!splashRemoved && (
-            <IntroSplash
-              onLeaveStart={() => setIntroDone(true)}
-              onLeaveEnd={() => setSplashRemoved(true)}
-            />
-          )}
-          <Header />
-          <main className="relative">
-            <RouteOutlet />
-          </main>
-        </IntroProvider>
+        <ProjectExpandedProvider>
+          <LenisProvider>
+          <IntroProvider done={introDone}>
+            {!splashRemoved && (
+              <IntroSplash
+                onLeaveStart={() => setIntroDone(true)}
+                onLeaveEnd={() => setSplashRemoved(true)}
+              />
+            )}
+            <Header />
+            <main className="relative">
+              <RouteOutlet />
+            </main>
+          </IntroProvider>
+          </LenisProvider>
+        </ProjectExpandedProvider>
       </SpaRouterProvider>
     </ThemeProvider>
   );
@@ -41,11 +47,19 @@ export function SpaShell({ initialPath }: { initialPath: string }) {
 
 function RouteOutlet() {
   const path = useRouterPath();
+  // Key by view identity, not full URL — so changing filter or subcategory
+  // (which still renders HomeView) doesn't remount the whole tree and
+  // doesn't fight with the in-place layout animations inside ProjectsList.
+  const clean = path.split("?")[0].split("#")[0].replace(/\/$/, "") || "/";
+  const viewKey =
+    clean === "/about" || clean === "/people" || clean === "/services"
+      ? clean
+      : "home";
 
   return (
     <AnimatePresence mode="wait" initial={false}>
       <motion.div
-        key={path}
+        key={viewKey}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}

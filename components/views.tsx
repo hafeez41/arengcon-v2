@@ -1,9 +1,14 @@
 "use client";
 
+import clsx from "clsx";
 import { ProjectsList } from "./projects-list";
 import { UpdatesList } from "./updates-list";
 import { SiteFooter } from "./site-footer";
 import { parseRouteFilter, type FilterKey } from "./header";
+import { AboutView } from "./about-view";
+import { PeopleView } from "./people-view";
+import { ServicesView } from "./services-view";
+import { useProjectExpanded } from "./project-expanded-context";
 
 export function HomeView({
   filter = "all",
@@ -12,11 +17,12 @@ export function HomeView({
   filter?: FilterKey;
   subcategory?: string;
 } = {}) {
+  const { anyExpanded } = useProjectExpanded();
   return (
     <>
       <div className="h-[72px] desk:h-[120px]" aria-hidden />
       <section className="pb-24 desk:pb-32">
-        <div className="pt-12 desk:pt-16">
+        <div className={clsx("pt-12", anyExpanded ? "desk:pt-0" : "desk:pt-16")}>
           {filter === "updates" ? (
             <UpdatesList />
           ) : (
@@ -52,6 +58,10 @@ export function NotFoundView() {
 
 export function resolveView(path: string): React.ReactNode {
   const clean = path.split("?")[0].split("#")[0].replace(/\/$/, "") || "/";
+
+  if (clean === "/about") return <AboutView />;
+  if (clean === "/people") return <PeopleView />;
+  if (clean === "/services") return <ServicesView />;
 
   const projectMatch = clean.match(/^\/projects\/([^/]+)$/);
   if (projectMatch) return <HomeView filter="all" />;

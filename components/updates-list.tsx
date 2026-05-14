@@ -7,9 +7,7 @@ import { SmartImage } from "./smart-image";
 import { ScrollFade } from "./scroll-fade";
 import { type Update } from "@/lib/updates";
 import { useEffectiveUpdates } from "@/lib/effective-data";
-
-const FLOAT = { duration: 1.4, ease: [0.22, 1, 0.36, 1] as const };
-const ENTRY = { duration: 1.2, ease: [0.22, 1, 0.36, 1] as const };
+import { SIZE } from "@/lib/motion";
 
 export function UpdatesList() {
   const { list } = useEffectiveUpdates();
@@ -25,7 +23,7 @@ export function UpdatesList() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={ENTRY}
+            transition={SIZE}
           >
             <ScrollFade>
               <UpdateRow
@@ -60,7 +58,7 @@ function UpdateRow({
         {/* Header column — date, title, kind */}
         <motion.div
           layout
-          transition={{ layout: FLOAT }}
+          transition={{ layout: SIZE }}
           className={clsx(
             "col-span-12 row-start-2 md:row-start-1",
             hasImage
@@ -106,7 +104,7 @@ function UpdateRow({
         {hasImage && (
           <motion.button
             layout
-            transition={{ layout: FLOAT }}
+            transition={{ layout: SIZE }}
             type="button"
             onClick={onClick}
             className={clsx(
@@ -119,7 +117,7 @@ function UpdateRow({
           >
             <motion.div
               layout
-              transition={{ layout: FLOAT }}
+              transition={{ layout: SIZE }}
               className="relative aspect-[4/3] w-full overflow-hidden bg-ink/[0.04]"
             >
               <SmartImage
@@ -136,45 +134,41 @@ function UpdateRow({
         {/* Excerpt + body — height collapses when not expanded so the
             description column doesn't inflate the row height. */}
         {hasImage ? (
-          <motion.div
-            initial={false}
-            animate={{
-              opacity: expanded ? 1 : 0,
-              height: expanded ? "auto" : 0,
-            }}
-            transition={FLOAT}
+          <div
             aria-hidden={!expanded}
-            style={{ overflow: "hidden" }}
             className={clsx(
               "col-span-12 row-start-3 md:col-span-3 md:col-start-10 md:row-start-1",
+              "grid transition-[grid-template-rows,opacity] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
+              expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
               !expanded && "pointer-events-none select-none",
             )}
           >
-            <p className="text-[13.5px] leading-[1.65]">{update.excerpt}</p>
-            <div className="mt-5 space-y-3 text-[13px] leading-[1.65] text-ink/85">
-              {update.body.map((para, i) => (
-                <p key={i}>{para}</p>
-              ))}
+            <div className="min-h-0 overflow-hidden">
+              <p className="text-[13.5px] leading-[1.65]">{update.excerpt}</p>
+              <div className="mt-5 space-y-3 text-[13px] leading-[1.65] text-ink/85">
+                {update.body.map((para, i) => (
+                  <p key={i}>{para}</p>
+                ))}
+              </div>
             </div>
-          </motion.div>
+          </div>
         ) : (
-          <motion.div
-            initial={false}
-            animate={{
-              height: expanded ? "auto" : 0,
-              opacity: expanded ? 1 : 0,
-            }}
-            transition={FLOAT}
+          <div
             aria-hidden={!expanded}
-            style={{ overflow: "hidden" }}
-            className="col-span-12 row-start-3 md:col-span-9 md:col-start-2 md:row-start-2"
+            className={clsx(
+              "col-span-12 row-start-3 md:col-span-9 md:col-start-2 md:row-start-2",
+              "grid transition-[grid-template-rows,opacity] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
+              expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+            )}
           >
-            <div className="mt-3 max-w-prose space-y-4 text-[14px] leading-[1.65] md:text-[15px]">
-              {update.body.map((para, i) => (
-                <p key={i}>{para}</p>
-              ))}
+            <div className="min-h-0 overflow-hidden">
+              <div className="mt-3 max-w-prose space-y-4 text-[14px] leading-[1.65] md:text-[15px]">
+                {update.body.map((para, i) => (
+                  <p key={i}>{para}</p>
+                ))}
+              </div>
             </div>
-          </motion.div>
+          </div>
         )}
       </div>
     </div>

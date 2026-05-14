@@ -8,14 +8,13 @@ import { useTheme } from "./theme-provider";
 import { useNavigate, useRouterPath } from "./spa-router";
 import { useIntroDone } from "./intro-context";
 import { SearchOverlay } from "./search-overlay";
+import { useProjectExpanded } from "./project-expanded-context";
 import {
   type Category,
   SUBCATEGORIES,
   categoryHasSubcategories,
 } from "@/lib/projects";
-
-const MORPH = { duration: 1.2, ease: [0.22, 1, 0.36, 1] as const };
-const FLOAT = { duration: 0.85, ease: [0.22, 1, 0.36, 1] as const };
+import { SIZE } from "@/lib/motion";
 
 export type FilterKey = "all" | Category | "updates";
 
@@ -24,12 +23,18 @@ export type RouteFilter = {
   subcategory?: string;
 };
 
-const FILTERS: { key: FilterKey; label: string; href: string }[] = [
+const DISCIPLINE_FILTERS: { key: FilterKey; label: string; href: string }[] = [
   { key: "arch", label: "Architecture", href: "/architecture" },
   { key: "int", label: "Interiors", href: "/interiors" },
   { key: "cons", label: "Construction", href: "/construction" },
   { key: "land", label: "Landscaping", href: "/landscaping" },
   { key: "updates", label: "Updates", href: "/updates" },
+];
+
+const PAGE_LINKS: { key: string; label: string; href: string }[] = [
+  { key: "about", label: "About", href: "/about" },
+  { key: "people", label: "People", href: "/people" },
+  { key: "services", label: "Services", href: "/services" },
 ];
 
 const PATH_TO_CATEGORY: Record<string, FilterKey> = {
@@ -42,8 +47,12 @@ const PATH_TO_CATEGORY: Record<string, FilterKey> = {
   news: "updates",
 };
 
-export function FILTER_FROM_PATH(path: string): FilterKey {
-  return parseRouteFilter(path).category;
+function getActivePage(path: string): string | null {
+  const clean = path.split("?")[0].split("#")[0].replace(/\/$/, "");
+  if (clean === "/about") return "about";
+  if (clean === "/people") return "people";
+  if (clean === "/services") return "services";
+  return null;
 }
 
 export function parseRouteFilter(path: string): RouteFilter {
@@ -67,14 +76,14 @@ export function parseRouteFilter(path: string): RouteFilter {
 export function Header() {
   const path = useRouterPath();
   const { category: active, subcategory: activeSub } = parseRouteFilter(path);
+  const activePage = getActivePage(path);
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
   const introDone = useIntroDone();
+  const { expandedOverlapsRail } = useProjectExpanded();
   const [searchOpen, setSearchOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerExpanded, setDrawerExpanded] = useState<FilterKey | null>(null);
-
-  // Desktop: allow manually collapsing active category's sub-tree
   const [closed, setClosed] = useState<FilterKey | null>(null);
 
   useEffect(() => {
@@ -110,6 +119,40 @@ export function Header() {
     navigate(href);
   };
 
+  const handleDisciplineClick = (f: { key: FilterKey; href: string }) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (active === f.key && !activePage) {
+      navigate("/");
+    } else {
+      setClosed(null);
+      navigate(f.href);
+    }
+  };
+
+  const handlePageClick = (p: { key: string; href: string }) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (activePage === p.key) {
+      navigate("/");
+    } else {
+      navigate(p.href);
+    }
+  };
+
+  const handleContactClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setDrawerOpen(false);
+    const footer = document.getElementById("site-footer");
+    if (footer) {
+      footer.scrollIntoView({ behavior: "smooth" });
+    }
+    window.dispatchEvent(new CustomEvent("arengcon:open-contact"));
+  };
+
+  // On desktop, show hamburger instead of side rail only while an expanded
+  // project's rect overlaps the rail's viewport zone. Once you scroll past
+  // the expanded row, the rail returns.
+  const showHamburger = expandedOverlapsRail;
+
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-40 bg-paper/95 backdrop-blur">
@@ -118,21 +161,26 @@ export function Header() {
             href="/"
             onClick={go("/")}
             aria-label="Arengcon home"
-            className="flex items-center gap-2.5 desk:gap-4"
+            className="flex items-center gap-2.5 desk:gap-3"
           >
             {introDone ? (
               <motion.div
                 layoutId="brand-mark"
-                transition={{ layout: MORPH }}
-                className="flex items-center gap-2.5 desk:gap-4"
+                transition={{ layout: SIZE }}
+                className="flex items-center gap-2.5 desk:gap-3"
               >
-                <Logo className="h-9 w-9 desk:h-16 desk:w-16" priority />
-                <span className="font-bank text-[18px] font-medium uppercase leading-none tracking-[0.04em] desk:text-[42px]">
-                  Arengcon
-                </span>
+                <Logo className="h-8 w-8 desk:h-10 desk:w-10" priority />
+                <div className="flex flex-col">
+                  <span className="font-bank text-[16px] font-medium uppercase leading-none tracking-[0.04em] desk:text-[22px]">
+                    Arengcon
+                  </span>
+                  <span className="hidden desk:block text-[7px] uppercase tracking-[0.28em] text-muted mt-1">
+                    a design &amp; construction company
+                  </span>
+                </div>
               </motion.div>
             ) : (
-              <span aria-hidden className="block h-9 w-[120px] desk:h-16 desk:w-[260px]" />
+              <span aria-hidden className="block h-8 w-[110px] desk:h-10 desk:w-[200px]" />
             )}
           </a>
 
@@ -151,11 +199,14 @@ export function Header() {
             >
               <ThemeIcon dark={theme === "dark"} />
             </button>
-            {/* Hamburger — shown below desk: (mobile + all tablets) */}
+            {/* Hamburger: always shown on mobile/tablet; shown on desktop only when a project is expanded */}
             <button
               onClick={() => setDrawerOpen(true)}
               aria-label="Open navigation"
-              className="grid h-9 w-9 place-items-center rounded-full transition-colors duration-200 hover:bg-ink/[0.06] desk:hidden"
+              className={clsx(
+                "grid h-9 w-9 place-items-center rounded-full transition-colors duration-200 hover:bg-ink/[0.06]",
+                showHamburger ? "" : "desk:hidden",
+              )}
             >
               <HamburgerIcon />
             </button>
@@ -163,88 +214,130 @@ export function Header() {
         </div>
       </header>
 
-      {/* Desktop side rail — only at desk: and above */}
-      <aside className="pointer-events-none fixed left-6 top-[200px] z-40 hidden desk:block desk:left-12">
-        <ul className="flex flex-col">
-          {FILTERS.map((f) => {
-            const isActive = active === f.key;
-            const hasSubs =
-              f.key !== "all" &&
-              f.key !== "updates" &&
-              categoryHasSubcategories(f.key as Category);
-            const showSubs = hasSubs && isActive && closed !== f.key;
-            const onCatClick = (e: React.MouseEvent) => {
-              e.preventDefault();
-              if (isActive && hasSubs) {
-                setClosed((prev) => (prev === f.key ? null : f.key));
-              } else {
-                setClosed(null);
-                navigate(f.href);
-              }
-            };
-            return (
-              <li key={f.key} className="flex flex-col">
-                <a
-                  href={f.href}
-                  onClick={onCatClick}
-                  className={clsx(
-                    "pointer-events-auto relative flex items-center py-3 text-[12.5px] font-medium uppercase tracking-[0.18em] transition-colors duration-200",
-                    isActive ? "text-ink" : "text-muted hover:text-ink",
-                  )}
-                >
-                  {isActive && !activeSub && (
-                    <motion.span
-                      layoutId="filter-rail-mark"
-                      transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                      className="absolute -left-5 block h-[2px] w-3 bg-ink"
-                    />
-                  )}
-                  <span>{f.label}</span>
-                </a>
-
-                {hasSubs && (
-                  <motion.div
-                    initial={false}
-                    animate={{ height: showSubs ? "auto" : 0, opacity: showSubs ? 1 : 0 }}
-                    transition={FLOAT}
-                    style={{ overflow: "hidden" }}
+      {/* Desktop side rail — hidden only while an expanded project overlaps the rail's zone */}
+      {!expandedOverlapsRail && (
+        <aside className="pointer-events-none fixed left-6 top-[200px] z-40 hidden desk:block desk:left-12">
+          <ul className="flex flex-col">
+            {DISCIPLINE_FILTERS.map((f) => {
+              const isActive = active === f.key && !activePage;
+              const hasSubs =
+                f.key !== "all" &&
+                f.key !== "updates" &&
+                categoryHasSubcategories(f.key as Category);
+              const showSubs = hasSubs && isActive && closed !== f.key;
+              const onCatClick = (e: React.MouseEvent) => {
+                e.preventDefault();
+                if (isActive && hasSubs) {
+                  setClosed((prev) => (prev === f.key ? null : f.key));
+                } else {
+                  handleDisciplineClick(f)(e);
+                }
+              };
+              return (
+                <li key={f.key} className="flex flex-col">
+                  <a
+                    href={f.href}
+                    onClick={onCatClick}
+                    className={clsx(
+                      "pointer-events-auto relative flex items-center py-2.5 text-[11.5px] font-medium uppercase tracking-[0.18em] transition-colors duration-200",
+                      isActive ? "text-ink" : "text-muted hover:text-ink",
+                    )}
                   >
-                    <ul className="ml-1 mt-1 flex flex-col border-l border-line/60 pl-4">
-                      {SUBCATEGORIES[f.key as Category].map((sub) => {
-                        const isSubActive = activeSub === sub.slug;
-                        const subHref = `${f.href}/${sub.slug}`;
-                        return (
-                          <li key={sub.slug}>
-                            <a
-                              href={subHref}
-                              onClick={go(subHref)}
-                              className={clsx(
-                                "pointer-events-auto relative block py-1.5 text-[11px] tracking-[0.06em] transition-colors duration-200",
-                                isSubActive ? "text-ink" : "text-muted/80 hover:text-ink",
-                              )}
-                            >
-                              {isSubActive && (
-                                <motion.span
-                                  layoutId="filter-rail-mark"
-                                  transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                                  className="absolute -left-[21px] top-1/2 block h-[2px] w-2.5 -translate-y-1/2 bg-ink"
-                                />
-                              )}
-                              {sub.label}
-                            </a>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </motion.div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      </aside>
+                    {isActive && !activeSub && (
+                      <motion.span
+                        layoutId="filter-rail-mark"
+                        transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                        className="absolute -left-5 block h-[2px] w-3 bg-ink"
+                      />
+                    )}
+                    <span>{f.label}</span>
+                  </a>
 
-      {/* Mobile/tablet nav drawer — hidden at desk: and above */}
+                  {hasSubs && (
+                    <div
+                      className={clsx(
+                        "grid transition-[grid-template-rows,opacity] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
+                        showSubs ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+                      )}
+                    >
+                      <div className="min-h-0 overflow-hidden">
+                      <ul className="ml-1 mt-1 flex flex-col border-l border-line/60 pl-4">
+                        {SUBCATEGORIES[f.key as Category].map((sub) => {
+                          const isSubActive = activeSub === sub.slug && isActive;
+                          const subHref = `${f.href}/${sub.slug}`;
+                          return (
+                            <li key={sub.slug}>
+                              <a
+                                href={subHref}
+                                onClick={go(subHref)}
+                                className={clsx(
+                                  "pointer-events-auto relative block py-1.5 text-[10.5px] tracking-[0.06em] transition-colors duration-200",
+                                  isSubActive ? "text-ink" : "text-muted/80 hover:text-ink",
+                                )}
+                              >
+                                {isSubActive && (
+                                  <motion.span
+                                    layoutId="filter-rail-mark"
+                                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                                    className="absolute -left-[21px] top-1/2 block h-[2px] w-2.5 -translate-y-1/2 bg-ink"
+                                  />
+                                )}
+                                {sub.label}
+                              </a>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                      </div>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+
+          {/* Page links separator */}
+          <div className="my-5 h-px w-8 bg-line" />
+
+          <ul className="flex flex-col">
+            {PAGE_LINKS.map((p) => {
+              const isActive = activePage === p.key;
+              return (
+                <li key={p.key}>
+                  <a
+                    href={p.href}
+                    onClick={handlePageClick(p)}
+                    className={clsx(
+                      "pointer-events-auto relative flex items-center py-2.5 text-[11.5px] font-medium uppercase tracking-[0.18em] transition-colors duration-200",
+                      isActive ? "text-ink" : "text-muted hover:text-ink",
+                    )}
+                  >
+                    {isActive && (
+                      <motion.span
+                        layoutId="filter-rail-mark"
+                        transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                        className="absolute -left-5 block h-[2px] w-3 bg-ink"
+                      />
+                    )}
+                    {p.label}
+                  </a>
+                </li>
+              );
+            })}
+            <li>
+              <a
+                href="#contact"
+                onClick={handleContactClick}
+                className="pointer-events-auto flex items-center py-2.5 text-[11.5px] font-medium uppercase tracking-[0.18em] text-muted transition-colors duration-200 hover:text-ink"
+              >
+                Contact
+              </a>
+            </li>
+          </ul>
+        </aside>
+      )}
+
+      {/* Mobile/tablet + expanded-state nav drawer */}
       <AnimatePresence>
         {drawerOpen && (
           <>
@@ -254,7 +347,7 @@ export function Header() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-[60] bg-ink/25 desk:hidden"
+              className="fixed inset-0 z-[60] bg-ink/25"
               onClick={() => setDrawerOpen(false)}
             />
             <motion.nav
@@ -263,7 +356,7 @@ export function Header() {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 280 }}
-              className="fixed left-0 top-0 z-[70] flex h-full w-72 flex-col bg-paper px-8 py-8 desk:hidden"
+              className="fixed left-0 top-0 z-[70] flex h-full w-72 flex-col bg-paper px-8 py-8"
             >
               <button
                 onClick={() => setDrawerOpen(false)}
@@ -273,15 +366,16 @@ export function Header() {
                 <XIcon />
               </button>
 
-              <div className="mb-10 mt-2">
-                <span className="font-bank text-[13px] font-medium uppercase tracking-[0.14em] text-muted">
+              <div className="mb-8 mt-2">
+                <span className="font-bank text-[11px] font-medium uppercase tracking-[0.18em] text-muted">
                   Navigation
                 </span>
               </div>
 
+              {/* Disciplines */}
               <ul className="flex flex-col">
-                {FILTERS.map((f) => {
-                  const isActive = active === f.key;
+                {DISCIPLINE_FILTERS.map((f) => {
+                  const isActive = active === f.key && !activePage;
                   const hasSubs =
                     f.key !== "all" &&
                     f.key !== "updates" &&
@@ -296,12 +390,13 @@ export function Header() {
                             setDrawerExpanded(isOpen ? null : f.key);
                             if (!isActive) navigate(f.href);
                           } else {
-                            navigate(f.href);
+                            if (isActive) navigate("/");
+                            else navigate(f.href);
                             setDrawerOpen(false);
                           }
                         }}
                         className={clsx(
-                          "flex w-full items-center justify-between py-3.5 text-left text-[12.5px] font-medium uppercase tracking-[0.18em] transition-colors duration-200",
+                          "flex w-full items-center justify-between py-3 text-left text-[12px] font-medium uppercase tracking-[0.18em] transition-colors duration-200",
                           isActive ? "text-ink" : "text-muted hover:text-ink",
                         )}
                       >
@@ -323,28 +418,22 @@ export function Header() {
                       </button>
 
                       {hasSubs && (
-                        <motion.div
-                          initial={false}
-                          animate={{ height: isOpen ? "auto" : 0, opacity: isOpen ? 1 : 0 }}
-                          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                          style={{ overflow: "hidden" }}
+                        <div
+                          className={clsx(
+                            "grid transition-[grid-template-rows,opacity] duration-[400ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
+                            isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+                          )}
                         >
+                          <div className="min-h-0 overflow-hidden">
                           <ul className="mb-2 ml-5 border-l border-line/60 pl-4">
                             {SUBCATEGORIES[f.key as Category].map((sub) => {
-                              const isSubActive = activeSub === sub.slug;
                               const subHref = `${f.href}/${sub.slug}`;
                               return (
                                 <li key={sub.slug}>
                                   <a
                                     href={subHref}
-                                    onClick={(e) => {
-                                      go(subHref)(e);
-                                      setDrawerOpen(false);
-                                    }}
-                                    className={clsx(
-                                      "block py-2 text-[11px] tracking-[0.06em] transition-colors duration-200",
-                                      isSubActive ? "text-ink" : "text-muted/80 hover:text-ink",
-                                    )}
+                                    onClick={(e) => { go(subHref)(e); setDrawerOpen(false); }}
+                                    className="block py-2 text-[11px] tracking-[0.06em] text-muted/80 transition-colors duration-200 hover:text-ink"
                                   >
                                     {sub.label}
                                   </a>
@@ -352,11 +441,52 @@ export function Header() {
                               );
                             })}
                           </ul>
-                        </motion.div>
+                          </div>
+                        </div>
                       )}
                     </li>
                   );
                 })}
+              </ul>
+
+              {/* Separator */}
+              <div className="my-4 h-px bg-line" />
+
+              {/* Page links */}
+              <ul className="flex flex-col">
+                {PAGE_LINKS.map((p) => {
+                  const isActive = activePage === p.key;
+                  return (
+                    <li key={p.key}>
+                      <button
+                        onClick={() => {
+                          if (isActive) navigate("/");
+                          else navigate(p.href);
+                          setDrawerOpen(false);
+                        }}
+                        className={clsx(
+                          "flex w-full items-center py-3 text-left text-[12px] font-medium uppercase tracking-[0.18em] transition-colors duration-200",
+                          isActive ? "text-ink" : "text-muted hover:text-ink",
+                        )}
+                      >
+                        <span className="relative pl-5">
+                          {isActive && (
+                            <span className="absolute left-0 top-1/2 block h-[2px] w-2.5 -translate-y-1/2 bg-ink" />
+                          )}
+                          {p.label}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+                <li>
+                  <button
+                    onClick={handleContactClick}
+                    className="flex w-full items-center py-3 pl-5 text-left text-[12px] font-medium uppercase tracking-[0.18em] text-muted transition-colors duration-200 hover:text-ink"
+                  >
+                    Contact
+                  </button>
+                </li>
               </ul>
             </motion.nav>
           </>
@@ -405,30 +535,13 @@ function ChevronRightIcon() {
 
 function ThemeIcon({ dark }: { dark: boolean }) {
   return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       {dark ? (
         <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
       ) : (
         <>
           <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2" />
-          <path d="M12 20v2" />
-          <path d="m4.93 4.93 1.41 1.41" />
-          <path d="m17.66 17.66 1.41 1.41" />
-          <path d="M2 12h2" />
-          <path d="M20 12h2" />
-          <path d="m4.93 19.07 1.41-1.41" />
-          <path d="m17.66 6.34 1.41-1.41" />
+          <path d="M12 2v2M12 20v2m-7.07-14.07 1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2m-4.93-7.07-1.41 1.41M6.34 17.66l-1.41 1.41" />
         </>
       )}
     </svg>

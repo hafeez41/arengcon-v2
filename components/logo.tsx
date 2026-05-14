@@ -26,16 +26,3 @@ export function Logo({
     </span>
   );
 }
-
-export function Wordmark({ className }: { className?: string }) {
-  return (
-    <span
-      className={clsx(
-        "font-bank font-medium tracking-wider2 uppercase",
-        className,
-      )}
-    >
-      Arengcon
-    </span>
-  );
-}

@@ -86,21 +86,6 @@ async function ensureLoaded() {
   cache.loaded = true;
 }
 
-export async function listProjects(): Promise<AdminProject[]> {
-  await ensureLoaded();
-  return cache.projects ?? [];
-}
-
-export async function listUpdates(): Promise<AdminUpdate[]> {
-  await ensureLoaded();
-  return cache.updates ?? [];
-}
-
-export async function getContact(): Promise<AdminContact | null> {
-  await ensureLoaded();
-  return cache.contact ?? null;
-}
-
 export async function upsertProject(p: AdminProject) {
   await ensureLoaded();
   const list = (cache.projects ?? []).slice();

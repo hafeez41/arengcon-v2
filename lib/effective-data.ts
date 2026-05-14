@@ -8,7 +8,7 @@ import {
   type AdminContact,
   DEFAULT_CONTACT,
 } from "./admin-store";
-import { type Project, type Category, projects as placeholderProjects } from "./projects";
+import { type Project, projects as placeholderProjects } from "./projects";
 import { type Update, updates as placeholderUpdates } from "./updates";
 
 function adminProjectToProject(p: AdminProject): Project {
@@ -86,29 +86,13 @@ export function useEffectiveContact() {
   return { loaded, contact: merged, isCustom: !!contact };
 }
 
-export function projectsByCategoryFiltered(list: Project[], cat: Category): Project[] {
-  return list.filter((p) => p.category === cat);
-}
-
-export function findProject(list: Project[], slug: string): Project | undefined {
-  return list.find((p) => p.slug === slug);
-}
-
-export function findUpdate(list: Update[], slug: string): Update | undefined {
-  return list.find((u) => u.slug === slug);
-}
-
 export function projectGallery(p: Project, adminProjects: AdminProject[]): string[] {
   const admin = adminProjects.find((ap) => ap.id === p.slug);
   if (admin && admin.gallery.length > 0) {
     return [admin.hero, ...admin.gallery];
   }
-  return [
-    p.image,
-    `https://picsum.photos/seed/${p.slug}-2/1600/1100`,
-    `https://picsum.photos/seed/${p.slug}-3/1600/1100`,
-    `https://picsum.photos/seed/${p.slug}-4/1600/1100`,
-    `https://picsum.photos/seed/${p.slug}-5/1600/1100`,
-  ];
+  // No admin gallery — render the hero only. Avoid third-party placeholder
+  // images leaking into production.
+  return [p.image];
 }
 

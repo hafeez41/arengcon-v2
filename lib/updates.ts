@@ -83,15 +83,3 @@ export const updates: Update[] = [
     image: "https://picsum.photos/seed/civic-library-topping-out/1600/1200",
   },
 ];
-
-export function getUpdate(slug: string) {
-  return updates.find((u) => u.slug === slug);
-}
-
-export function formatDate(date: string) {
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  }).format(new Date(date));
-}
