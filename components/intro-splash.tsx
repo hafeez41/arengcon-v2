@@ -87,7 +87,7 @@ export function IntroSplash({
               className="flex flex-col items-center"
             >
               <Logo
-                className="h-24 w-24 sm:h-36 sm:w-36"
+                className="h-48 w-48 sm:h-72 sm:w-72"
                 priority
               />
               <div className="mt-7 overflow-hidden">
@@ -109,7 +109,7 @@ export function IntroSplash({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: show ? 1 : 0, y: show ? 0 : 8 }}
             transition={{ delay: 0.85, duration: 0.6 }}
-            className="mt-5 text-center text-[10px] uppercase tracking-[0.38em] text-[#9a9690] sm:text-[12px]"
+            className="mt-8 text-center text-[20px] uppercase tracking-[0.38em] text-[#9a9690] sm:text-[24px]"
           >
             A Design &amp; Construction Company
           </motion.p>
