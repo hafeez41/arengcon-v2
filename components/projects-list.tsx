@@ -54,7 +54,7 @@ export function ProjectsList({
   const filterKey = subcategory ? `${filter}/${subcategory}` : `${filter}`;
 
   return (
-    <ul className="flex flex-col gap-y-24 desk:gap-y-32">
+    <ul className="flex flex-col gap-y-8 desk:gap-y-11">
       <AnimatePresence mode="popLayout" initial={true}>
         {filtered.map((p) => (
           <motion.li
