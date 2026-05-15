@@ -54,7 +54,7 @@ export function ProjectsList({
   const filterKey = subcategory ? `${filter}/${subcategory}` : `${filter}`;
 
   return (
-    <ul className="flex flex-col gap-y-8 desk:gap-y-11">
+    <ul className="flex flex-col gap-y-2 desk:gap-y-3">
       <AnimatePresence mode="popLayout" initial={true}>
         {filtered.map((p) => (
           <motion.li
@@ -241,7 +241,7 @@ function ProjectRow({
         className={clsx(
           "flex transition-[gap,padding] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
           expanded
-            ? "items-start gap-8 desk:gap-12 pl-[7.5vw] desk:pl-0 desk:py-[12vh]"
+            ? "items-start gap-8 desk:gap-12 pl-[7.5vw] desk:pl-0 desk:py-[4vh]"
             : "mx-auto max-w-[1100px] flex-col gap-4 px-5 items-start desk:flex-row desk:gap-10 desk:px-8",
         )}
       >
@@ -299,7 +299,7 @@ function ProjectRow({
           className={clsx(
             "group block shrink-0 transition-[width,height,max-width] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
             expanded
-              ? "w-[85vw] h-[64vw] desk:w-[114vh] desk:max-w-[calc(100%_-_528px)] desk:h-[76vh] order-first desk:order-none"
+              ? "w-[85vw] h-[64vw] desk:w-[108vh] desk:max-w-[calc(100%_-_528px)] desk:h-[72vh] order-first desk:order-none"
               : "w-full desk:w-[560px] desk:h-[420px] desk:max-w-none",
           )}
           aria-label={`${expanded ? "Collapse" : "Expand"} ${project.title}`}
@@ -345,7 +345,7 @@ function ProjectRow({
               transition={{ ...SIZE, delay: 0.18 + i * 0.06 }}
               className="shrink-0 desk:self-center"
             >
-              <div className="relative w-[85vw] h-[64vw] overflow-hidden bg-ink/[0.04] desk:w-[114vh] desk:max-w-[calc(100vw_-_528px)] desk:h-[76vh]">
+              <div className="relative w-[85vw] h-[64vw] overflow-hidden bg-ink/[0.04] desk:w-[108vh] desk:max-w-[calc(100vw_-_528px)] desk:h-[72vh]">
                 <SmartImage
                   src={src}
                   alt={`${project.title} ${i + 2}`}
@@ -364,7 +364,7 @@ function ProjectRow({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 60 }}
             transition={{ ...SIZE, delay: 0.18 + galleryRest.length * 0.06 }}
-            className="flex w-[85vw] h-[64vw] shrink-0 items-center justify-center bg-ink p-10 text-paper desk:w-[114vh] desk:max-w-[calc(100vw_-_528px)] desk:h-[76vh] desk:p-14"
+            className="flex w-[85vw] h-[64vw] shrink-0 items-center justify-center bg-ink p-10 text-paper desk:w-[108vh] desk:max-w-[calc(100vw_-_528px)] desk:h-[72vh] desk:p-14"
           >
             <blockquote className="max-w-[32ch]">
               <p className="text-[20px] leading-[1.3] tracking-tight desk:text-[24px]">
