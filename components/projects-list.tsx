@@ -310,7 +310,7 @@ function ProjectRow({
               alt={project.title}
               fill
               sizes="(max-width: 1400px) 85vw, calc(100vw - 530px)"
-              className="object-cover transition-transform duration-[1.2s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.02]"
+              className="object-contain transition-transform duration-[1.2s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.02]"
             />
           </div>
         </button>
@@ -351,7 +351,7 @@ function ProjectRow({
                   alt={`${project.title} ${i + 2}`}
                   fill
                   sizes="(max-width: 1400px) 80vw, 600px"
-                  className="object-cover"
+                  className="object-contain"
                 />
               </div>
             </motion.figure>
