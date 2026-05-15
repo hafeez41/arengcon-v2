@@ -29,7 +29,7 @@ export function ProjectsList({
   filter: FilterKey;
   subcategory?: string;
 }) {
-  const { list, adminProjects } = useEffectiveProjects();
+  const { list, adminProjects, isPlaceholder } = useEffectiveProjects();
   const [expanded, setExpanded] = useState<string | null>(null);
   const { setAnyExpanded } = useProjectExpanded();
 
@@ -70,6 +70,7 @@ export function ProjectsList({
                 expanded={expanded === p.slug}
                 onClick={() => handleClick(p.slug)}
                 adminProjects={adminProjects}
+                isPlaceholder={isPlaceholder}
               />
             </ScrollFade>
           </motion.li>
@@ -84,11 +85,13 @@ function ProjectRow({
   expanded,
   onClick,
   adminProjects,
+  isPlaceholder,
 }: {
   project: Project;
   expanded: boolean;
   onClick: () => void;
   adminProjects: AdminProject[];
+  isPlaceholder: boolean;
 }) {
   const cat = CATEGORY_LABELS[project.category];
   const gallery = projectGallery(project, adminProjects);
@@ -238,7 +241,7 @@ function ProjectRow({
         className={clsx(
           "flex transition-[gap,padding] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
           expanded
-            ? "items-start desk:gap-6 pl-[7.5vw] desk:pl-0 desk:py-[12vh]"
+            ? "items-start gap-8 desk:gap-12 pl-[7.5vw] desk:pl-0 desk:py-[12vh]"
             : "mx-auto max-w-[1100px] flex-col gap-4 px-5 items-start desk:flex-row desk:gap-10 desk:px-8",
         )}
       >
@@ -354,8 +357,8 @@ function ProjectRow({
             </motion.figure>
           ))}
 
-        {/* Pull quote */}
-        {expanded && (
+        {/* Pull quote — placeholder/demo data only, never on admin-created projects */}
+        {expanded && isPlaceholder && (
           <motion.aside
             initial={{ opacity: 0, x: 60 }}
             animate={{ opacity: 1, x: 0 }}
