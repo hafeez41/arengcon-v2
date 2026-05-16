@@ -2,8 +2,8 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { projects, CATEGORY_LABELS } from "@/lib/projects";
-import { updates } from "@/lib/updates";
+import { CATEGORY_LABELS } from "@/lib/projects";
+import { useEffectiveProjects, useEffectiveUpdates } from "@/lib/effective-data";
 import { useNavigate } from "./spa-router";
 
 type Result = {
@@ -11,6 +11,7 @@ type Result = {
   href: string;
   title: string;
   meta: string;
+  haystack: string;
 };
 
 export function SearchOverlay({
@@ -23,6 +24,8 @@ export function SearchOverlay({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [q, setQ] = useState("");
   const navigate = useNavigate();
+  const { list: projectList } = useEffectiveProjects();
+  const { list: updateList } = useEffectiveUpdates();
 
   useEffect(() => {
     if (open) {
@@ -32,27 +35,55 @@ export function SearchOverlay({
   }, [open]);
 
   const results: Result[] = useMemo(() => {
-    const projectResults: Result[] = projects.map((p) => ({
-      type: "Project",
-      href: `/projects/${p.slug}`,
-      title: p.title,
-      meta: `${CATEGORY_LABELS[p.category].name} · ${p.location} · ${p.year}`,
-    }));
-    const updateResults: Result[] = updates.map((u) => ({
+    const projectResults: Result[] = projectList.map((p) => {
+      const cat = CATEGORY_LABELS[p.category]?.name ?? p.category;
+      return {
+        type: "Project",
+        href: `/projects/${p.slug}`,
+        title: p.title,
+        meta: `${cat} · ${p.location} · ${p.year}`,
+        haystack: [
+          p.title,
+          cat,
+          p.subcategory,
+          p.location,
+          p.client,
+          p.status,
+          p.size,
+          String(p.year),
+          p.summary,
+          ...(p.description ?? []),
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase(),
+      };
+    });
+    const updateResults: Result[] = updateList.map((u) => ({
       type: "Update",
       href: `/updates/${u.slug}`,
       title: u.title,
       meta: `${u.kind} · ${new Date(u.date).getFullYear()}`,
+      haystack: [
+        u.title,
+        u.kind,
+        u.excerpt,
+        ...(u.body ?? []),
+        new Date(u.date).getFullYear().toString(),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase(),
     }));
     const all = [...projectResults, ...updateResults];
-    if (!q.trim()) return all;
-    const needle = q.toLowerCase();
-    return all.filter(
-      (r) =>
-        r.title.toLowerCase().includes(needle) ||
-        r.meta.toLowerCase().includes(needle),
-    );
-  }, [q]);
+    const needle = q.trim().toLowerCase();
+    if (!needle) return all;
+    // Match every whitespace-separated term (AND search) anywhere in the
+    // record's combined text — title, category, location, client, status,
+    // summary, body, etc. — not just the title.
+    const terms = needle.split(/\s+/);
+    return all.filter((r) => terms.every((t) => r.haystack.includes(t)));
+  }, [q, projectList, updateList]);
 
   return (
     <AnimatePresence>
