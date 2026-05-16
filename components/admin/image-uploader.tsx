@@ -101,7 +101,7 @@ export function ImageUploader({
 export function GalleryUploader({
   values,
   onChange,
-  max = 6,
+  max = 12,
 }: {
   values: string[];
   onChange: (next: string[]) => void;

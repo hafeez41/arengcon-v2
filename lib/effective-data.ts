@@ -44,7 +44,11 @@ function adminUpdateToUpdate(u: AdminUpdate): Update {
 export function useEffectiveProjects() {
   const { projects, loaded } = useAdminData();
   return useMemo(() => {
-    const real = projects.map(adminProjectToProject);
+    // Public order is fixed to newest-first by createdAt, independent of the
+    // stored array order — so admin drag-reordering never affects the site.
+    const real = [...projects]
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .map(adminProjectToProject);
     return {
       loaded,
       list: real.length > 0 ? real : placeholderProjects,
@@ -57,7 +61,9 @@ export function useEffectiveProjects() {
 export function useEffectiveUpdates() {
   const { updates, loaded } = useAdminData();
   return useMemo(() => {
-    const real = updates.map(adminUpdateToUpdate);
+    const real = [...updates]
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .map(adminUpdateToUpdate);
     return {
       loaded,
       list: real.length > 0 ? real : placeholderUpdates,

@@ -6,6 +6,7 @@ import {
   type AdminProject,
   deleteProject,
   newId,
+  reorderProjects,
   upsertProject,
 } from "@/lib/admin-store";
 import {
@@ -15,6 +16,8 @@ import {
   categoryHasSubcategories,
 } from "@/lib/projects";
 import { ImageUploader, GalleryUploader } from "./image-uploader";
+import { useDragReorder } from "./use-drag-reorder";
+import { GripIcon } from "./grip-icon";
 
 const STATUSES = ["Built", "In Progress", "Concept"] as const;
 const CATEGORIES: Category[] = ["arch", "int", "cons", "land"];
@@ -40,6 +43,11 @@ function emptyProject(): AdminProject {
 
 export function ProjectsSection({ projects }: { projects: AdminProject[] }) {
   const [editing, setEditing] = useState<AdminProject | null>(null);
+  const { rowProps } = useDragReorder(
+    projects,
+    (p) => p.id,
+    (next) => void reorderProjects(next),
+  );
 
   return (
     <div className="space-y-8">
@@ -77,6 +85,7 @@ export function ProjectsSection({ projects }: { projects: AdminProject[] }) {
           <motion.li
             key={p.id}
             layout
+            {...rowProps(p)}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8, scale: 0.98 }}
@@ -85,12 +94,24 @@ export function ProjectsSection({ projects }: { projects: AdminProject[] }) {
               ease: [0.16, 1, 0.3, 1],
               delay: Math.min(i * 0.03, 0.15),
             }}
-            className="flex items-center gap-4 border border-line bg-paper px-4 py-3 transition-colors duration-200 hover:border-ink/40"
+            className="flex items-center gap-3 border border-line bg-paper px-4 py-3 transition-colors duration-200 hover:border-ink/40 data-[drop-target]:border-ink data-[drop-target]:border-dashed"
           >
+            <span
+              className="shrink-0 cursor-grab text-ink/30 transition-colors duration-200 hover:text-ink/60 active:cursor-grabbing"
+              aria-hidden
+              title="Drag to reorder"
+            >
+              <GripIcon />
+            </span>
             <div className="relative h-14 w-20 shrink-0 overflow-hidden bg-ink/5">
               {p.hero && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={p.hero} alt={p.title} className="h-full w-full object-cover" />
+                <img
+                  src={p.hero}
+                  alt={p.title}
+                  draggable={false}
+                  className="h-full w-full object-cover"
+                />
               )}
             </div>
             <div className="min-w-0 flex-1">
@@ -331,7 +352,7 @@ function ProjectEditor({
           <GalleryUploader
             values={draft.gallery}
             onChange={(v) => set("gallery", v)}
-            max={6}
+            max={12}
           />
         </div>
 

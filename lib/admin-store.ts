@@ -116,6 +116,20 @@ export async function deleteProject(id: string) {
   notify();
 }
 
+// Admin-only reorder. Updates the cache + UI immediately, then persists the
+// new array order. The public site sorts by createdAt so this is invisible
+// to visitors — purely for organizing the admin list.
+export async function reorderProjects(list: AdminProject[]) {
+  await ensureLoaded();
+  cache.projects = list.slice();
+  notify();
+  await fetch("/api/admin/projects", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(list),
+  });
+}
+
 export async function upsertUpdate(u: AdminUpdate) {
   await ensureLoaded();
   const list = (cache.updates ?? []).slice();
@@ -144,6 +158,18 @@ export async function deleteUpdate(id: string) {
   await fetch(`/api/admin/updates/${id}`, { method: "DELETE" });
   cache.updates = (cache.updates ?? []).filter((u) => u.id !== id);
   notify();
+}
+
+// Admin-only reorder (see reorderProjects). Invisible to the public site.
+export async function reorderUpdates(list: AdminUpdate[]) {
+  await ensureLoaded();
+  cache.updates = list.slice();
+  notify();
+  await fetch("/api/admin/updates", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(list),
+  });
 }
 
 export async function setContact(value: AdminContact | null) {

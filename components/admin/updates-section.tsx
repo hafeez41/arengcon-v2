@@ -6,9 +6,12 @@ import {
   type AdminUpdate,
   deleteUpdate,
   newId,
+  reorderUpdates,
   upsertUpdate,
 } from "@/lib/admin-store";
 import { ImageUploader } from "./image-uploader";
+import { useDragReorder } from "./use-drag-reorder";
+import { GripIcon } from "./grip-icon";
 
 const KINDS = ["Studio", "Press", "Project", "Talk"] as const;
 
@@ -31,6 +34,11 @@ function emptyUpdate(): AdminUpdate {
 
 export function UpdatesSection({ updates }: { updates: AdminUpdate[] }) {
   const [editing, setEditing] = useState<AdminUpdate | null>(null);
+  const { rowProps } = useDragReorder(
+    updates,
+    (u) => u.id,
+    (next) => void reorderUpdates(next),
+  );
 
   return (
     <div className="space-y-8">
@@ -73,6 +81,7 @@ export function UpdatesSection({ updates }: { updates: AdminUpdate[] }) {
           <motion.li
             key={u.id}
             layout
+            {...rowProps(u)}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8, scale: 0.98 }}
@@ -81,12 +90,19 @@ export function UpdatesSection({ updates }: { updates: AdminUpdate[] }) {
               ease: [0.16, 1, 0.3, 1],
               delay: Math.min(i * 0.03, 0.15),
             }}
-            className="flex items-center gap-4 border border-line bg-paper px-4 py-3 transition-colors duration-200 hover:border-ink/40"
+            className="flex items-center gap-3 border border-line bg-paper px-4 py-3 transition-colors duration-200 hover:border-ink/40 data-[drop-target]:border-ink data-[drop-target]:border-dashed"
           >
+            <span
+              className="shrink-0 cursor-grab text-ink/30 transition-colors duration-200 hover:text-ink/60 active:cursor-grabbing"
+              aria-hidden
+              title="Drag to reorder"
+            >
+              <GripIcon />
+            </span>
             <div className="relative h-14 w-20 shrink-0 overflow-hidden bg-ink/5">
               {u.hero ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={u.hero} alt={u.title} className="h-full w-full object-cover" />
+                <img src={u.hero} alt={u.title} draggable={false} className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-[8px] uppercase tracking-[0.18em] text-ink/40">
                   Text
