@@ -241,7 +241,7 @@ function ProjectRow({
         className={clsx(
           "flex transition-[gap,padding] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
           expanded
-            ? "items-start gap-8 desk:gap-12 pl-[7.5vw] desk:pl-0 desk:py-[2vh]"
+            ? "items-start gap-8 desk:gap-12 pl-[7.5vw] desk:pl-0 py-[2vh]"
             : "mx-auto max-w-[1100px] flex-col gap-4 px-5 items-start desk:flex-row desk:gap-10 desk:px-8",
         )}
       >
@@ -250,7 +250,7 @@ function ProjectRow({
           className={clsx(
             "shrink-0 transition-[width] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
             expanded
-              ? "px-5 pt-6 pb-2 desk:w-[200px] desk:max-h-[64vh] desk:overflow-y-auto desk:px-8 desk:py-6"
+              ? "px-5 pt-6 pb-2 max-h-[64vh] overflow-y-auto desk:w-[200px] desk:max-h-[64vh] desk:px-8 desk:py-6"
               : "w-full desk:w-[280px]",
           )}
         >
@@ -299,7 +299,7 @@ function ProjectRow({
           className={clsx(
             "group block shrink-0 transition-[width,height,max-width] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
             expanded
-              ? "w-[85vw] h-[64vw] desk:w-[96vh] desk:max-w-[calc(100%_-_528px)] desk:h-[64vh] order-first desk:order-none"
+              ? "w-[85vw] h-[64vh] desk:w-[96vh] desk:max-w-[calc(100%_-_528px)] desk:h-[64vh] order-first desk:order-none"
               : "w-full desk:w-[560px] desk:h-[420px] desk:max-w-none",
           )}
           aria-label={`${expanded ? "Collapse" : "Expand"} ${project.title}`}
@@ -320,11 +320,15 @@ function ProjectRow({
           aria-hidden={!expanded}
           className={clsx(
             "shrink-0 overflow-hidden transition-[width,opacity] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
-            expanded ? "w-[280px] opacity-100" : "w-0 opacity-0",
+            // max-h-0 when collapsed: in the mobile flex-COLUMN layout a
+            // zero-width item still reserves its full content height, which
+            // was injecting a huge empty gap between projects. Zero height
+            // kills that; on desktop flex-row it's a harmless no-op.
+            expanded ? "w-[280px] opacity-100" : "w-0 max-h-0 opacity-0",
             !expanded && "pointer-events-none select-none",
           )}
         >
-          <div className="w-[280px] px-5 py-6 desk:overflow-y-auto desk:max-h-[64vh]">
+          <div className="w-[280px] px-5 py-6 max-h-[64vh] overflow-y-auto desk:max-h-[64vh]">
             <p className="text-[13.5px] leading-[1.65]">{project.summary}</p>
             <div className="mt-5 space-y-3 text-[13px] leading-[1.65] text-ink/85">
               {project.description.map((para, i) => (
@@ -345,7 +349,7 @@ function ProjectRow({
               transition={{ ...SIZE, delay: 0.18 + i * 0.06 }}
               className="shrink-0 desk:self-center"
             >
-              <div className="relative w-[85vw] h-[64vw] overflow-hidden bg-ink/[0.04] desk:w-[96vh] desk:max-w-[calc(100vw_-_528px)] desk:h-[64vh]">
+              <div className="relative w-[85vw] h-[64vh] overflow-hidden bg-ink/[0.04] desk:w-[96vh] desk:max-w-[calc(100vw_-_528px)] desk:h-[64vh]">
                 <SmartImage
                   src={src}
                   alt={`${project.title} ${i + 2}`}
@@ -364,7 +368,7 @@ function ProjectRow({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 60 }}
             transition={{ ...SIZE, delay: 0.18 + galleryRest.length * 0.06 }}
-            className="flex w-[85vw] h-[64vw] shrink-0 items-center justify-center bg-ink p-10 text-paper desk:w-[96vh] desk:max-w-[calc(100vw_-_528px)] desk:h-[64vh] desk:p-14"
+            className="flex w-[85vw] h-[64vh] shrink-0 items-center justify-center bg-ink p-10 text-paper desk:w-[96vh] desk:max-w-[calc(100vw_-_528px)] desk:h-[64vh] desk:p-14"
           >
             <blockquote className="max-w-[32ch]">
               <p className="text-[20px] leading-[1.3] tracking-tight desk:text-[24px]">
