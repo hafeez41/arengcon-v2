@@ -34,7 +34,7 @@ function emptyUpdate(): AdminUpdate {
 
 export function UpdatesSection({ updates }: { updates: AdminUpdate[] }) {
   const [editing, setEditing] = useState<AdminUpdate | null>(null);
-  const { rowProps } = useDragReorder(
+  const { containerProps, rowProps } = useDragReorder(
     updates,
     (u) => u.id,
     (next) => void reorderUpdates(next),
@@ -75,7 +75,7 @@ export function UpdatesSection({ updates }: { updates: AdminUpdate[] }) {
         )}
       </AnimatePresence>
 
-      <ul className="space-y-3">
+      <ul className="space-y-3" {...containerProps}>
         <AnimatePresence initial={false}>
           {updates.map((u, i) => (
           <motion.li

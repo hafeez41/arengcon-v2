@@ -43,7 +43,7 @@ function emptyProject(): AdminProject {
 
 export function ProjectsSection({ projects }: { projects: AdminProject[] }) {
   const [editing, setEditing] = useState<AdminProject | null>(null);
-  const { rowProps } = useDragReorder(
+  const { containerProps, rowProps } = useDragReorder(
     projects,
     (p) => p.id,
     (next) => void reorderProjects(next),
@@ -79,7 +79,7 @@ export function ProjectsSection({ projects }: { projects: AdminProject[] }) {
           </motion.div>
         )}
       </AnimatePresence>
-      <ul className="space-y-3">
+      <ul className="space-y-3" {...containerProps}>
         <AnimatePresence initial={false}>
           {projects.map((p, i) => (
           <motion.li
