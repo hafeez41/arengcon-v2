@@ -6,7 +6,9 @@ import {
   type AdminProject,
   type AdminUpdate,
   type AdminContact,
+  type AdminService,
   DEFAULT_CONTACT,
+  DEFAULT_SERVICES,
 } from "./admin-store";
 import { type Project, projects as placeholderProjects } from "./projects";
 import { type Update, updates as placeholderUpdates } from "./updates";
@@ -71,6 +73,24 @@ export function useEffectiveUpdates() {
       adminUpdates: updates,
     };
   }, [updates, loaded]);
+}
+
+export function useEffectiveServices(): {
+  loaded: boolean;
+  list: AdminService[];
+  isPlaceholder: boolean;
+} {
+  const { services, loaded } = useAdminData();
+  return useMemo(() => {
+    // Services are an ordered list — keep the admin's array order on the
+    // public page too. Fall back to the stock defaults until one is added.
+    const real = services ?? [];
+    return {
+      loaded,
+      list: real.length > 0 ? real : DEFAULT_SERVICES,
+      isPlaceholder: real.length === 0,
+    };
+  }, [services, loaded]);
 }
 
 export function useEffectiveContact() {

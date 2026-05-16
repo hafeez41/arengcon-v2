@@ -8,6 +8,7 @@ export const redis = new Redis({
 export const RKEYS = {
   projects:    "arengcon:projects",
   updates:     "arengcon:updates",
+  services:    "arengcon:services",
   contact:     "arengcon:contact",
   credentials: "arengcon:credentials",
   session:     (token: string) => `arengcon:session:${token}`,
