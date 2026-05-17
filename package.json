@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@upstash/redis": "^1.38.0",
-    "@vercel/blob": "^2.3.3",
+    "aws4fetch": "^1.0.20",
     "clsx": "2.1.1",
     "framer-motion": "11.18.2",
     "lenis": "1.1.20",

@@ -74,6 +74,43 @@ export function SettingsSection({ onSignOut }: { onSignOut: () => void }) {
     onSignOut();
   };
 
+  const [migrating, setMigrating] = useState(false);
+  const [migrateResult, setMigrateResult] = useState<string | null>(null);
+
+  const runMigration = async () => {
+    if (
+      !confirm(
+        "Copy all existing Vercel Blob images to Cloudflare R2 and rewrite their URLs? Safe to run more than once.",
+      )
+    )
+      return;
+    setMigrating(true);
+    setMigrateResult(null);
+    try {
+      const res = await fetch("/api/admin/migrate-blob-to-r2", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMigrateResult(`Error: ${data.error || res.status}`);
+      } else {
+        const failed = data.failed?.length
+          ? ` · ${data.failed.length} failed`
+          : "";
+        setMigrateResult(
+          `Done — projects: ${data.projects}, updates: ${data.updates}, services: ${data.services}${failed}`,
+        );
+        if (data.failed?.length) console.log("Migration failures:", data.failed);
+      }
+    } catch (e) {
+      setMigrateResult(
+        `Error: ${e instanceof Error ? e.message : "request failed"}`,
+      );
+    } finally {
+      setMigrating(false);
+    }
+  };
+
   const dirty =
     newEmail !== currentEmail || newPassword.length > 0;
 
@@ -180,6 +217,40 @@ export function SettingsSection({ onSignOut }: { onSignOut: () => void }) {
           </button>
         </div>
       </form>
+
+      <div className="max-w-xl border-t border-line pt-8">
+        <h2 className="text-[11px] uppercase tracking-[0.18em] text-ink/55">
+          Maintenance
+        </h2>
+        <p className="mt-2 max-w-md text-[11px] leading-relaxed text-ink/45">
+          One-time: copy every image still hosted on Vercel Blob into
+          Cloudflare R2 and rewrite the stored URLs. Idempotent — safe to run
+          again. Run this, confirm images load, then delete the Vercel Blob
+          store.
+        </p>
+        <div className="mt-4 flex items-center gap-4">
+          <button
+            type="button"
+            onClick={runMigration}
+            disabled={migrating}
+            className="rounded-full border border-line px-4 py-2 text-[10.5px] font-medium uppercase tracking-[0.14em] text-ink/65 transition-colors duration-200 hover:border-ink hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {migrating ? "Migrating…" : "Migrate Blob → R2"}
+          </button>
+          {migrateResult && (
+            <span
+              className={
+                "text-[10.5px] uppercase tracking-[0.14em] " +
+                (migrateResult.startsWith("Error")
+                  ? "text-rose-500"
+                  : "text-emerald-600")
+              }
+            >
+              {migrateResult}
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

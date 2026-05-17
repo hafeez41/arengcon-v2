@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { del } from "@vercel/blob";
+import { deleteFromR2, isR2Url } from "@/lib/r2";
 import { redis, RKEYS } from "@/lib/redis";
 import { checkSession } from "@/lib/session";
 import type { AdminService } from "@/lib/admin-store";
-
-const isBlobUrl = (url: unknown): url is string =>
-  typeof url === "string" && url.includes(".public.blob.vercel-storage.com");
 
 export async function PUT(
   req: NextRequest,
@@ -22,11 +19,8 @@ export async function PUT(
   // doesn't leak on edits.
   if (idx >= 0) {
     const prev = list[idx];
-    if (
-      isBlobUrl(prev.image) &&
-      prev.image !== updated.image
-    ) {
-      await del(prev.image);
+    if (isR2Url(prev.image) && prev.image !== updated.image) {
+      await deleteFromR2(prev.image);
     }
     list[idx] = updated;
   } else {
@@ -46,8 +40,8 @@ export async function DELETE(
   const list = (await redis.get<AdminService[]>(RKEYS.services)) ?? [];
   const target = list.find((s) => s.id === id);
 
-  if (target && isBlobUrl(target.image)) {
-    await del(target.image);
+  if (target?.image) {
+    await deleteFromR2(target.image); // ignores non-R2 URLs internally
   }
 
   await redis.set(
