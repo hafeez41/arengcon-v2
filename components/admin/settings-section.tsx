@@ -76,6 +76,7 @@ export function SettingsSection({ onSignOut }: { onSignOut: () => void }) {
 
   const [migrating, setMigrating] = useState(false);
   const [migrateResult, setMigrateResult] = useState<string | null>(null);
+  const [migrateErrors, setMigrateErrors] = useState<string[]>([]);
 
   const runMigration = async () => {
     if (
@@ -86,6 +87,7 @@ export function SettingsSection({ onSignOut }: { onSignOut: () => void }) {
       return;
     setMigrating(true);
     setMigrateResult(null);
+    setMigrateErrors([]);
     try {
       const res = await fetch("/api/admin/migrate-blob-to-r2", {
         method: "POST",
@@ -100,7 +102,7 @@ export function SettingsSection({ onSignOut }: { onSignOut: () => void }) {
         setMigrateResult(
           `Done — projects: ${data.projects}, updates: ${data.updates}, services: ${data.services}${failed}`,
         );
-        if (data.failed?.length) console.log("Migration failures:", data.failed);
+        setMigrateErrors(Array.isArray(data.failed) ? data.failed : []);
       }
     } catch (e) {
       setMigrateResult(
@@ -241,7 +243,8 @@ export function SettingsSection({ onSignOut }: { onSignOut: () => void }) {
             <span
               className={
                 "text-[10.5px] uppercase tracking-[0.14em] " +
-                (migrateResult.startsWith("Error")
+                (migrateResult.startsWith("Error") ||
+                migrateResult.includes("failed")
                   ? "text-rose-500"
                   : "text-emerald-600")
               }
@@ -250,6 +253,23 @@ export function SettingsSection({ onSignOut }: { onSignOut: () => void }) {
             </span>
           )}
         </div>
+        {migrateErrors.length > 0 && (
+          <div className="mt-4 max-h-64 overflow-y-auto border border-line bg-ink/[0.02] p-3">
+            <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-rose-500">
+              First failures (read the reason after “::”)
+            </div>
+            <ul className="space-y-1.5">
+              {migrateErrors.slice(0, 5).map((err, i) => (
+                <li
+                  key={i}
+                  className="break-all font-mono text-[10.5px] leading-relaxed text-ink/70"
+                >
+                  {err}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );
