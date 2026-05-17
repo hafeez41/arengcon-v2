@@ -113,6 +113,42 @@ export function SettingsSection({ onSignOut }: { onSignOut: () => void }) {
     }
   };
 
+  const BLOB_HOST = "xx2wk87tgh57mdy5.public.blob.vercel-storage.com";
+
+  const runReset = async () => {
+    if (
+      !confirm(
+        "Revert every already-migrated R2 URL back to its original Vercel Blob URL? Do this only if you deleted R2 objects and want one clean migration pass. The Blob store must still exist.",
+      )
+    )
+      return;
+    setMigrating(true);
+    setMigrateResult(null);
+    setMigrateErrors([]);
+    try {
+      const res = await fetch(
+        `/api/admin/migrate-blob-to-r2?mode=reset&blobHost=${encodeURIComponent(
+          BLOB_HOST,
+        )}`,
+        { method: "POST" },
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        setMigrateResult(`Error: ${data.error || res.status}`);
+      } else {
+        setMigrateResult(
+          `Reset done — reverted projects: ${data.projects}, updates: ${data.updates}, services: ${data.services}. Now run “Migrate Blob → R2”.`,
+        );
+      }
+    } catch (e) {
+      setMigrateResult(
+        `Error: ${e instanceof Error ? e.message : "request failed"}`,
+      );
+    } finally {
+      setMigrating(false);
+    }
+  };
+
   const dirty =
     newEmail !== currentEmail || newPassword.length > 0;
 
@@ -230,7 +266,7 @@ export function SettingsSection({ onSignOut }: { onSignOut: () => void }) {
           again. Run this, confirm images load, then delete the Vercel Blob
           store.
         </p>
-        <div className="mt-4 flex items-center gap-4">
+        <div className="mt-4 flex flex-wrap items-center gap-4">
           <button
             type="button"
             onClick={runMigration}
@@ -238,6 +274,14 @@ export function SettingsSection({ onSignOut }: { onSignOut: () => void }) {
             className="rounded-full border border-line px-4 py-2 text-[10.5px] font-medium uppercase tracking-[0.14em] text-ink/65 transition-colors duration-200 hover:border-ink hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
           >
             {migrating ? "Migrating…" : "Migrate Blob → R2"}
+          </button>
+          <button
+            type="button"
+            onClick={runReset}
+            disabled={migrating}
+            className="rounded-full border border-line px-4 py-2 text-[10.5px] font-medium uppercase tracking-[0.14em] text-ink/45 transition-colors duration-200 hover:border-ink hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {migrating ? "Working…" : "Reset URLs → Blob"}
           </button>
           {migrateResult && (
             <span
