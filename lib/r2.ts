@@ -49,10 +49,18 @@ export async function uploadToR2(
   body: ArrayBuffer | Uint8Array,
   contentType: string,
 ): Promise<string> {
+  // R2 rejects chunked/aws-chunked uploads with 411 MissingContentLength —
+  // it requires a known Content-Length. Setting it explicitly (so aws4fetch
+  // signs it and the runtime sends a fixed-length body) is the fix.
+  const bytes =
+    body instanceof Uint8Array ? body : new Uint8Array(body);
   const res = await client().fetch(objectEndpoint(key), {
     method: "PUT",
-    body,
-    headers: { "Content-Type": contentType || "application/octet-stream" },
+    body: bytes,
+    headers: {
+      "Content-Type": contentType || "application/octet-stream",
+      "Content-Length": String(bytes.byteLength),
+    },
   });
   if (!res.ok) {
     throw new Error(`R2 upload failed (${res.status}): ${await res.text()}`);
