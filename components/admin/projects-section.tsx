@@ -37,6 +37,7 @@ function emptyProject(): AdminProject {
     description: "",
     hero: "",
     gallery: [],
+    unlimitedGallery: false,
     createdAt: Date.now(),
   };
 }
@@ -349,11 +350,36 @@ function ProjectEditor({
             required
           />
 
-          <GalleryUploader
-            values={draft.gallery}
-            onChange={(v) => set("gallery", v)}
-            max={12}
-          />
+          {(() => {
+            // Effective toggle: persisted flag, but also auto-on for any
+            // project that already exceeds 12 images (legacy/migrated data)
+            // so editing it never caps or blocks.
+            const unlimited =
+              draft.unlimitedGallery ?? draft.gallery.length > 12;
+            return (
+              <div className="space-y-3">
+                <label className="flex cursor-pointer items-center gap-3 select-none">
+                  <input
+                    type="checkbox"
+                    checked={unlimited}
+                    onChange={(e) =>
+                      set("unlimitedGallery", e.target.checked)
+                    }
+                    className="h-4 w-4 accent-ink"
+                  />
+                  <span className="text-[10px] uppercase tracking-[0.18em] text-ink/55">
+                    Unlimited gallery images (remove 12-image cap)
+                  </span>
+                </label>
+                <GalleryUploader
+                  values={draft.gallery}
+                  onChange={(v) => set("gallery", v)}
+                  max={12}
+                  unlimited={unlimited}
+                />
+              </div>
+            );
+          })()}
         </div>
 
         <div className="mt-8 flex items-center justify-end gap-3 border-t border-line pt-6">

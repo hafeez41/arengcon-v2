@@ -17,6 +17,8 @@ export type AdminProject = {
   description: string;
   hero: string;
   gallery: string[];
+  /** When true, the gallery has no 12-image cap. Optional/back-compat. */
+  unlimitedGallery?: boolean;
   createdAt: number;
 };
 

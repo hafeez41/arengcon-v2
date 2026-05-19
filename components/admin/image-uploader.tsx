@@ -102,21 +102,27 @@ export function GalleryUploader({
   values,
   onChange,
   max = 12,
+  unlimited = false,
 }: {
   values: string[];
   onChange: (next: string[]) => void;
   max?: number;
+  unlimited?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isFull = !unlimited && values.length >= max;
 
   const onPick = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setError(null);
     setBusy(true);
     try {
-      const slots = max - values.length;
+      const slots = unlimited
+        ? files.length
+        : Math.max(0, max - values.length);
       const list = Array.from(files).slice(0, slots);
       const urls: string[] = [];
       for (const f of list) {
@@ -138,15 +144,16 @@ export function GalleryUploader({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <label className="text-[10px] uppercase tracking-[0.18em] text-ink/55">
-          Gallery — {values.length} / {max}
+          Gallery — {values.length}
+          {unlimited ? " · unlimited" : ` / ${max}`}
         </label>
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          disabled={busy || values.length >= max}
+          disabled={busy || isFull}
           className="text-[10px] uppercase tracking-[0.18em] text-ink/65 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {busy ? "Uploading…" : values.length >= max ? "Full" : "Add"}
+          {busy ? "Uploading…" : isFull ? "Full" : "Add"}
         </button>
       </div>
       <div className="grid grid-cols-3 gap-2 md:grid-cols-6">
@@ -165,8 +172,10 @@ export function GalleryUploader({
             </button>
           </div>
         ))}
-        {values.length < max &&
-          Array.from({ length: Math.min(max - values.length, 3) }).map((_, i) => (
+        {!isFull &&
+          Array.from({
+            length: unlimited ? 3 : Math.min(max - values.length, 3),
+          }).map((_, i) => (
             <button
               key={`empty-${i}`}
               type="button"
