@@ -88,13 +88,16 @@ export function Header() {
 
   useEffect(() => {
     setClosed(null);
-    setDrawerOpen(false);
     const { category } = parseRouteFilter(path);
-    setDrawerExpanded(
-      category !== "all" && category !== "updates" && categoryHasSubcategories(category as Category)
-        ? category
-        : null,
-    );
+    const hasSubs =
+      category !== "all" &&
+      category !== "updates" &&
+      categoryHasSubcategories(category as Category);
+    // Only auto-close the drawer when the new route has no subcategories.
+    // Tapping a category-with-subs in the drawer should keep it open so the
+    // user can see/pick a subcategory without reopening.
+    if (!hasSubs) setDrawerOpen(false);
+    setDrawerExpanded(hasSubs ? category : null);
   }, [path]);
 
   useEffect(() => {

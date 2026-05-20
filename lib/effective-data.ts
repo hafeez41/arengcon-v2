@@ -51,10 +51,13 @@ export function useEffectiveProjects() {
     const real = [...projects]
       .sort((a, b) => b.createdAt - a.createdAt)
       .map(adminProjectToProject);
+    // While admin data is still in-flight, render NOTHING (empty list) rather
+    // than flashing placeholders that get swapped out a moment later.
+    const list = !loaded ? [] : real.length > 0 ? real : placeholderProjects;
     return {
       loaded,
-      list: real.length > 0 ? real : placeholderProjects,
-      isPlaceholder: real.length === 0,
+      list,
+      isPlaceholder: loaded && real.length === 0,
       adminProjects: projects,
     };
   }, [projects, loaded]);
@@ -66,10 +69,11 @@ export function useEffectiveUpdates() {
     const real = [...updates]
       .sort((a, b) => b.createdAt - a.createdAt)
       .map(adminUpdateToUpdate);
+    const list = !loaded ? [] : real.length > 0 ? real : placeholderUpdates;
     return {
       loaded,
-      list: real.length > 0 ? real : placeholderUpdates,
-      isPlaceholder: real.length === 0,
+      list,
+      isPlaceholder: loaded && real.length === 0,
       adminUpdates: updates,
     };
   }, [updates, loaded]);
