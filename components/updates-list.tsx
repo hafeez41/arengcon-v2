@@ -1,125 +1,68 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
 import clsx from "clsx";
 import { SmartImage } from "./smart-image";
 import { ScrollFade } from "./scroll-fade";
 import { type Update } from "@/lib/updates";
 import { useEffectiveUpdates } from "@/lib/effective-data";
-import { SIZE } from "@/lib/motion";
 
 export function UpdatesList() {
   const { list } = useEffectiveUpdates();
-  const [expanded, setExpanded] = useState<string | null>(null);
 
   return (
     <ul className="flex flex-col gap-y-20 md:gap-y-28">
-      <AnimatePresence mode="popLayout" initial={true}>
-        {list.map((u) => (
-          <motion.li
-            key={`updates-${u.slug}`}
-            layout="position"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={SIZE}
-          >
-            <ScrollFade>
-              <UpdateRow
-                update={u}
-                expanded={expanded === u.slug}
-                onClick={() =>
-                  setExpanded((cur) => (cur === u.slug ? null : u.slug))
-                }
-              />
-            </ScrollFade>
-          </motion.li>
-        ))}
-      </AnimatePresence>
+      {list.map((u) => (
+        <li key={`updates-${u.slug}`}>
+          <ScrollFade>
+            <UpdateRow update={u} />
+          </ScrollFade>
+        </li>
+      ))}
     </ul>
   );
 }
 
-function UpdateRow({
-  update,
-  expanded,
-  onClick,
-}: {
-  update: Update;
-  expanded: boolean;
-  onClick: () => void;
-}) {
+function UpdateRow({ update }: { update: Update }) {
   const hasImage = !!update.image;
 
   return (
     <div className="mx-auto w-full max-w-[1180px] px-5 md:px-8">
       <div className="grid grid-cols-12 items-start gap-x-6 gap-y-6 md:gap-x-8">
         {/* Header column — date, title, kind */}
-        <motion.div
-          layout
-          transition={{ layout: SIZE }}
+        <div
           className={clsx(
             "col-span-12 row-start-2 md:row-start-1",
             hasImage
-              ? expanded
-                ? "md:col-span-3 md:col-start-1"
-                : "md:col-span-3 md:col-start-2"
+              ? "md:col-span-3 md:col-start-1"
               : "md:col-span-9 md:col-start-2",
           )}
         >
-          <button
-            type="button"
-            onClick={onClick}
-            className="block w-full text-left"
-            aria-expanded={expanded}
-          >
-            <DateBlock date={update.date} />
-            <h3 className={clsx(
+          <DateBlock date={update.date} />
+          <h3
+            className={clsx(
               "mt-4 leading-[1.2] tracking-tight",
               hasImage
                 ? "text-[18px] md:text-[20px]"
                 : "max-w-[24ch] text-[24px] md:text-[34px]",
-            )}>
-              {update.title}
-            </h3>
-            <div className="mt-2 flex items-center gap-3 text-[10.5px] uppercase tracking-[0.14em] text-muted">
-              <span>{update.kind}</span>
-              {!hasImage && (
-                <>
-                  <span aria-hidden>·</span>
-                  <span>Text update</span>
-                </>
-              )}
-            </div>
-            {!hasImage && (
-              <p className="mt-5 max-w-[58ch] text-[14px] leading-[1.55] text-muted">
-                {update.excerpt}
-              </p>
             )}
-          </button>
-        </motion.div>
+          >
+            {update.title}
+          </h3>
+          <div className="mt-2 flex items-center gap-3 text-[10.5px] uppercase tracking-[0.14em] text-muted">
+            <span>{update.kind}</span>
+            {!hasImage && (
+              <>
+                <span aria-hidden>·</span>
+                <span>Text update</span>
+              </>
+            )}
+          </div>
+        </div>
 
         {/* Image — only when present */}
         {hasImage && (
-          <motion.button
-            layout
-            transition={{ layout: SIZE }}
-            type="button"
-            onClick={onClick}
-            className={clsx(
-              "group col-span-12 row-start-1 block",
-              expanded
-                ? "md:col-span-6 md:col-start-4"
-                : "md:col-span-5 md:col-start-5",
-            )}
-            aria-label={`${expanded ? "Collapse" : "Expand"} ${update.title}`}
-          >
-            <motion.div
-              layout
-              transition={{ layout: SIZE }}
-              className="relative aspect-[4/3] w-full overflow-hidden bg-ink/[0.04]"
-            >
+          <div className="col-span-12 row-start-1 md:col-span-6 md:col-start-4">
+            <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink/[0.04]">
               <SmartImage
                 src={update.image}
                 alt={update.title}
@@ -127,46 +70,26 @@ function UpdateRow({
                 sizes="(max-width: 768px) 100vw, 600px"
                 className="object-cover"
               />
-            </motion.div>
-          </motion.button>
+            </div>
+          </div>
         )}
 
-        {/* Excerpt + body — height collapses when not expanded so the
-            description column doesn't inflate the row height. */}
+        {/* Excerpt + body — always visible */}
         {hasImage ? (
-          <div
-            aria-hidden={!expanded}
-            className={clsx(
-              "col-span-12 row-start-3 md:col-span-3 md:col-start-10 md:row-start-1",
-              "grid transition-[grid-template-rows,opacity] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
-              expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
-              !expanded && "pointer-events-none select-none",
-            )}
-          >
-            <div className="min-h-0 overflow-hidden">
-              <p className="text-[13.5px] leading-[1.65]">{update.excerpt}</p>
-              <div className="mt-5 space-y-3 text-[13px] leading-[1.65] text-ink/85">
-                {update.body.map((para, i) => (
-                  <p key={i}>{para}</p>
-                ))}
-              </div>
+          <div className="col-span-12 row-start-3 md:col-span-3 md:col-start-10 md:row-start-1">
+            <p className="text-[13.5px] leading-[1.65]">{update.excerpt}</p>
+            <div className="mt-5 space-y-3 text-[13px] leading-[1.65] text-ink/85">
+              {update.body.map((para, i) => (
+                <p key={i}>{para}</p>
+              ))}
             </div>
           </div>
         ) : (
-          <div
-            aria-hidden={!expanded}
-            className={clsx(
-              "col-span-12 row-start-3 md:col-span-9 md:col-start-2 md:row-start-2",
-              "grid transition-[grid-template-rows,opacity] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
-              expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
-            )}
-          >
-            <div className="min-h-0 overflow-hidden">
-              <div className="mt-3 max-w-prose space-y-4 text-[14px] leading-[1.65] md:text-[15px]">
-                {update.body.map((para, i) => (
-                  <p key={i}>{para}</p>
-                ))}
-              </div>
+          <div className="col-span-12 row-start-3 md:col-span-9 md:col-start-2 md:row-start-2">
+            <div className="mt-3 max-w-prose space-y-4 text-[14px] leading-[1.65] md:text-[15px]">
+              {update.body.map((para, i) => (
+                <p key={i}>{para}</p>
+              ))}
             </div>
           </div>
         )}

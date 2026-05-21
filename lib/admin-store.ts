@@ -82,6 +82,52 @@ export const DEFAULT_CONTACT: AdminContact = {
   social: {},
 };
 
+export type AdminAbout = {
+  /** Intro block. Paragraphs separated by blank lines (\n\n). */
+  intro: string;
+  /** Optional hero image (R2 url), shown as a 16:9 banner under the intro. */
+  heroImage: string;
+  mission: string;
+  vision: string;
+  values: { label: string; body: string }[];
+};
+
+// Shown on the public About page until admin edits it.
+export const DEFAULT_ABOUT: AdminAbout = {
+  intro:
+    "Arengcon is a full-service design and construction firm founded in Abuja in 2013. We operate at the intersection of architecture, interiors, landscape, and construction — delivering projects that are formally rigorous and deeply responsive to their context.\n\nOur practice is built on the belief that great environments require the sustained attention of a single committed team from concept through completion. We do not hand projects off — we see them through.",
+  heroImage: "",
+  mission:
+    "To advance the built environment in West Africa through the disciplined practice of architecture and construction — creating places that endure in both form and purpose, and that genuinely serve the people who inhabit them.",
+  vision:
+    "A continent whose cities are shaped by intention, where every building is a considered act of civic investment, and where local expertise leads its own transformation.",
+  values: [
+    { label: "Integrity", body: "We do what we say, and we say what we mean. Every promise is a contract." },
+    { label: "Craft", body: "We hold the quality of execution to the same standard as the quality of ideas." },
+    { label: "Commitment", body: "We are fully present on every project, at every scale, at every stage." },
+  ],
+};
+
+export type AdminPerson = {
+  id: string;
+  name: string;
+  role: string;
+  /** Bio. Paragraphs separated by blank lines (\n\n). */
+  bio: string;
+  /** Optional R2 portrait URL. */
+  photo: string;
+  createdAt: number;
+};
+
+// Shown on the public People page until admin adds at least one. Once any
+// admin person exists, these disappear entirely (same pattern as services).
+export const DEFAULT_PEOPLE: AdminPerson[] = [
+  { id: "ppl-d1", name: "Emeka Okoye", role: "Founding Principal", bio: "Emeka leads the practice and has directed projects across residential, civic, and commercial typologies. His approach is rooted in the conviction that architecture must first serve those who inhabit it.\n\nHe holds degrees from Ahmadu Bello University and the Architectural Association, London, and has taught at institutions across West Africa.", photo: "", createdAt: 1 },
+  { id: "ppl-d2", name: "Amina Bello", role: "Principal, Interiors", bio: "Amina oversees all interior design projects at the firm, bringing a material intelligence shaped by years of sourcing and specification work across the region.\n\nHer interiors are distinguished by a clarity of light and a rigour of detail that elevates every space she touches.", photo: "", createdAt: 2 },
+  { id: "ppl-d3", name: "Tunde Adeyemi", role: "Director of Construction", bio: "Tunde bridges the gap between design intent and built reality. His background in both engineering and construction management allows him to anticipate and resolve challenges before they reach the site.\n\nHe has overseen delivery of over forty projects across Nigeria and Ghana.", photo: "", createdAt: 3 },
+  { id: "ppl-d4", name: "Chisom Eze", role: "Senior Associate, Landscape", bio: "Chisom leads landscape design across all project types, bringing an ecological sensitivity and a deep knowledge of West African planting to every scheme.", photo: "", createdAt: 4 },
+];
+
 type Listener = () => void;
 
 const listeners = new Set<Listener>();
@@ -95,21 +141,28 @@ let cache: {
   updates?: AdminUpdate[];
   services?: AdminService[];
   contact?: AdminContact | null;
+  about?: AdminAbout | null;
+  people?: AdminPerson[];
   loaded?: boolean;
 } = {};
 
 async function ensureLoaded() {
   if (cache.loaded) return;
-  const [projects, updates, services, contact] = await Promise.all([
-    fetch("/api/admin/projects").then((r) => (r.ok ? r.json() : [])),
-    fetch("/api/admin/updates").then((r) => (r.ok ? r.json() : [])),
-    fetch("/api/admin/services").then((r) => (r.ok ? r.json() : [])),
-    fetch("/api/admin/contact").then((r) => (r.ok ? r.json() : null)),
-  ]);
+  const [projects, updates, services, contact, about, people] =
+    await Promise.all([
+      fetch("/api/admin/projects").then((r) => (r.ok ? r.json() : [])),
+      fetch("/api/admin/updates").then((r) => (r.ok ? r.json() : [])),
+      fetch("/api/admin/services").then((r) => (r.ok ? r.json() : [])),
+      fetch("/api/admin/contact").then((r) => (r.ok ? r.json() : null)),
+      fetch("/api/admin/about").then((r) => (r.ok ? r.json() : null)),
+      fetch("/api/admin/people").then((r) => (r.ok ? r.json() : [])),
+    ]);
   cache.projects = projects ?? [];
   cache.updates = updates ?? [];
   cache.services = services ?? [];
   cache.contact = contact;
+  cache.about = about;
+  cache.people = people ?? [];
   cache.loaded = true;
 }
 
@@ -253,6 +306,60 @@ export async function setContact(value: AdminContact | null) {
   notify();
 }
 
+// About — singleton, like contact.
+export async function setAbout(value: AdminAbout | null) {
+  await ensureLoaded();
+  await fetch("/api/admin/about", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(value),
+  });
+  cache.about = value;
+  notify();
+}
+
+// People — collection, like services. Mirrors admin order on the public site.
+export async function upsertPerson(p: AdminPerson) {
+  await ensureLoaded();
+  const list = (cache.people ?? []).slice();
+  const idx = list.findIndex((x) => x.id === p.id);
+  if (idx >= 0) {
+    await fetch(`/api/admin/people/${p.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(p),
+    });
+    list[idx] = p;
+  } else {
+    await fetch("/api/admin/people", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(p),
+    });
+    list.push(p); // append; admin can drag to reorder
+  }
+  cache.people = list;
+  notify();
+}
+
+export async function deletePerson(id: string) {
+  await ensureLoaded();
+  await fetch(`/api/admin/people/${id}`, { method: "DELETE" });
+  cache.people = (cache.people ?? []).filter((p) => p.id !== id);
+  notify();
+}
+
+export async function reorderPeople(list: AdminPerson[]) {
+  await ensureLoaded();
+  cache.people = list.slice();
+  notify();
+  await fetch("/api/admin/people", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(list),
+  });
+}
+
 function subscribe(fn: Listener): () => void {
   listeners.add(fn);
   return () => {
@@ -278,6 +385,8 @@ export function useAdminData() {
     updates: cache.updates ?? [],
     services: cache.services ?? [],
     contact: cache.contact ?? null,
+    about: cache.about ?? null,
+    people: cache.people ?? [],
     tick,
   };
 }

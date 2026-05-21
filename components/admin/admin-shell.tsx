@@ -5,6 +5,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ProjectsSection } from "./projects-section";
 import { UpdatesSection } from "./updates-section";
 import { ServicesSection } from "./services-section";
+import { AboutSection } from "./about-section";
+import { PeopleSection } from "./people-section";
 import { ContactSection } from "./contact-section";
 import { SettingsSection } from "./settings-section";
 import { LoginScreen } from "./login-screen";
@@ -17,6 +19,8 @@ const TABS = [
   { key: "projects", label: "Projects" },
   { key: "updates", label: "Updates" },
   { key: "services", label: "Services" },
+  { key: "about", label: "About" },
+  { key: "people", label: "People" },
   { key: "contact", label: "Contact" },
   { key: "settings", label: "Settings" },
 ] as const;
@@ -35,7 +39,8 @@ function AdminInner() {
   const [tab, setTab] = useState<Tab>("projects");
   const [authReady, setAuthReady] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
-  const { loaded, projects, updates, services, contact } = useAdminData();
+  const { loaded, projects, updates, services, about, people, contact } =
+    useAdminData();
 
   useEffect(() => {
     if (!isAuthed()) {
@@ -94,6 +99,8 @@ function AdminInner() {
               {tab === "projects" && <ProjectsSection projects={projects} />}
               {tab === "updates" && <UpdatesSection updates={updates} />}
               {tab === "services" && <ServicesSection services={services} />}
+              {tab === "about" && <AboutSection about={about} />}
+              {tab === "people" && <PeopleSection people={people} />}
               {tab === "contact" && <ContactSection contact={contact} />}
               {tab === "settings" && <SettingsSection onSignOut={onSignOut} />}
             </motion.div>
@@ -228,7 +235,7 @@ function AdminHeader({
           </div>
         </div>
 
-        <nav className="relative mt-3 grid grid-cols-5 gap-1 rounded-full border border-line bg-paper/40 p-1 md:hidden">
+        <nav className="relative mt-3 grid grid-cols-4 gap-1 rounded-[24px] border border-line bg-paper/40 p-1 md:hidden">
           {TABS.map((t) => (
             <button
               key={t.key}

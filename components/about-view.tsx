@@ -1,8 +1,16 @@
 "use client";
 
+import { SmartImage } from "./smart-image";
 import { SiteFooter } from "./site-footer";
+import { useEffectiveAbout } from "@/lib/effective-data";
 
 export function AboutView() {
+  const { about } = useEffectiveAbout();
+  const introParas = about.intro
+    .split("\n\n")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
   return (
     <>
       <div className="h-[72px] desk:h-[120px]" aria-hidden />
@@ -11,56 +19,56 @@ export function AboutView() {
           About
         </h1>
 
-        <div className="mt-12 grid gap-8 desk:grid-cols-2 desk:gap-20">
-          <p className="text-[14px] leading-[1.8] tracking-tight text-ink/85">
-            Arengcon is a full-service design and construction firm founded in Abuja in 2013.
-            We operate at the intersection of architecture, interiors, landscape, and construction —
-            delivering projects that are formally rigorous and deeply responsive to their context.
-          </p>
-          <p className="text-[14px] leading-[1.8] tracking-tight text-ink/85">
-            Our practice is built on the belief that great environments require the sustained
-            attention of a single committed team from concept through completion. We do not hand
-            projects off — we see them through.
-          </p>
+        {introParas.length > 0 && (
+          <div className="mt-12 grid gap-8 desk:grid-cols-2 desk:gap-20">
+            {introParas.map((para, i) => (
+              <p
+                key={i}
+                className="text-[14px] leading-[1.8] tracking-tight text-ink/85"
+              >
+                {para}
+              </p>
+            ))}
+          </div>
+        )}
+
+        <div className="relative mt-16 aspect-[16/9] w-full overflow-hidden bg-ink/[0.04] desk:mt-24">
+          {about.heroImage && (
+            <SmartImage
+              src={about.heroImage}
+              alt="About hero"
+              fill
+              sizes="(max-width: 1400px) 100vw, 1100px"
+              className="object-cover"
+            />
+          )}
         </div>
 
-        <div className="mt-16 aspect-[16/9] w-full bg-ink/[0.04] desk:mt-24" />
-
         <div className="mt-20 space-y-16 desk:mt-28">
-          <AboutSection title="Mission">
-            To advance the built environment in West Africa through the disciplined practice of
-            architecture and construction — creating places that endure in both form and purpose,
-            and that genuinely serve the people who inhabit them.
-          </AboutSection>
+          {about.mission && (
+            <AboutSection title="Mission">{about.mission}</AboutSection>
+          )}
 
-          <AboutSection title="Vision">
-            A continent whose cities are shaped by intention, where every building is a considered
-            act of civic investment, and where local expertise leads its own transformation.
-          </AboutSection>
+          {about.vision && (
+            <AboutSection title="Vision">{about.vision}</AboutSection>
+          )}
 
-          <AboutSection title="Values">
-            <div className="mt-6 grid gap-8 desk:grid-cols-3">
-              {[
-                {
-                  label: "Integrity",
-                  body: "We do what we say, and we say what we mean. Every promise is a contract.",
-                },
-                {
-                  label: "Craft",
-                  body: "We hold the quality of execution to the same standard as the quality of ideas.",
-                },
-                {
-                  label: "Commitment",
-                  body: "We are fully present on every project, at every scale, at every stage.",
-                },
-              ].map(({ label, body }) => (
-                <div key={label}>
-                  <div className="text-[10px] uppercase tracking-[0.18em] text-muted">{label}</div>
-                  <p className="mt-3 text-[13.5px] leading-[1.75] text-ink/85">{body}</p>
-                </div>
-              ))}
-            </div>
-          </AboutSection>
+          {about.values.length > 0 && (
+            <AboutSection title="Values">
+              <div className="mt-6 grid gap-8 desk:grid-cols-3">
+                {about.values.map(({ label, body }, i) => (
+                  <div key={`${label}-${i}`}>
+                    <div className="text-[10px] uppercase tracking-[0.18em] text-muted">
+                      {label}
+                    </div>
+                    <p className="mt-3 text-[13.5px] leading-[1.75] text-ink/85">
+                      {body}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </AboutSection>
+          )}
         </div>
       </section>
       <SiteFooter />
@@ -82,7 +90,9 @@ function AboutSection({
       </h2>
       <div className="mt-6 max-w-[700px]">
         {typeof children === "string" ? (
-          <p className="text-[14px] leading-[1.8] tracking-tight text-ink/85">{children}</p>
+          <p className="text-[14px] leading-[1.8] tracking-tight text-ink/85">
+            {children}
+          </p>
         ) : (
           children
         )}

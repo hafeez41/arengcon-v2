@@ -7,8 +7,12 @@ import {
   type AdminUpdate,
   type AdminContact,
   type AdminService,
+  type AdminAbout,
+  type AdminPerson,
   DEFAULT_CONTACT,
   DEFAULT_SERVICES,
+  DEFAULT_ABOUT,
+  DEFAULT_PEOPLE,
 } from "./admin-store";
 import { type Project, projects as placeholderProjects } from "./projects";
 import { type Update, updates as placeholderUpdates } from "./updates";
@@ -92,6 +96,44 @@ export function useEffectiveServices(): {
       isPlaceholder: real.length === 0,
     };
   }, [services, loaded]);
+}
+
+export function useEffectiveAbout(): {
+  loaded: boolean;
+  about: AdminAbout;
+  isCustom: boolean;
+} {
+  const { about, loaded } = useAdminData();
+  const merged: AdminAbout = useMemo(() => {
+    if (!about) return DEFAULT_ABOUT;
+    return {
+      intro: about.intro?.trim() ? about.intro : DEFAULT_ABOUT.intro,
+      heroImage: about.heroImage ?? "",
+      mission: about.mission?.trim() ? about.mission : DEFAULT_ABOUT.mission,
+      vision: about.vision?.trim() ? about.vision : DEFAULT_ABOUT.vision,
+      values:
+        Array.isArray(about.values) && about.values.length > 0
+          ? about.values
+          : DEFAULT_ABOUT.values,
+    };
+  }, [about]);
+  return { loaded, about: merged, isCustom: !!about };
+}
+
+export function useEffectivePeople(): {
+  loaded: boolean;
+  list: AdminPerson[];
+  isPlaceholder: boolean;
+} {
+  const { people, loaded } = useAdminData();
+  return useMemo(() => {
+    const real = people ?? [];
+    return {
+      loaded,
+      list: real.length > 0 ? real : DEFAULT_PEOPLE,
+      isPlaceholder: real.length === 0,
+    };
+  }, [people, loaded]);
 }
 
 export function useEffectiveContact() {

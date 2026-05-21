@@ -10,6 +10,8 @@ export const RKEYS = {
   updates:     "arengcon:updates",
   services:    "arengcon:services",
   contact:     "arengcon:contact",
+  about:       "arengcon:about",
+  people:      "arengcon:people",
   credentials: "arengcon:credentials",
   session:     (token: string) => `arengcon:session:${token}`,
 } as const;
