@@ -143,9 +143,9 @@ export async function deleteProject(id: string) {
   notify();
 }
 
-// Admin-only reorder. Updates the cache + UI immediately, then persists the
-// new array order. The public site sorts by createdAt so this is invisible
-// to visitors — purely for organizing the admin list.
+// Reorder the array. Updates the cache + UI immediately, then persists the
+// new order. Public site mirrors this order, so this is visible to visitors
+// (not just admin housekeeping).
 export async function reorderProjects(list: AdminProject[]) {
   await ensureLoaded();
   cache.projects = list.slice();
@@ -187,7 +187,7 @@ export async function deleteUpdate(id: string) {
   notify();
 }
 
-// Admin-only reorder (see reorderProjects). Invisible to the public site.
+// Reorder the array (see reorderProjects). Visible on the public site.
 export async function reorderUpdates(list: AdminUpdate[]) {
   await ensureLoaded();
   cache.updates = list.slice();
