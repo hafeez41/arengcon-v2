@@ -222,6 +222,30 @@ function ProjectRow({
 
   return (
     <div className="relative">
+    <AnimatePresence>
+      {expanded && (
+        <motion.div
+          key="swipe-hint"
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 0.55, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.5, delay: 0.35 }}
+          className="pointer-events-none absolute right-5 top-3 z-10 flex items-center gap-1.5 desk:hidden"
+          aria-hidden
+        >
+          <span className="text-[9px] uppercase tracking-[0.22em] text-ink/70">
+            Swipe
+          </span>
+          <motion.span
+            animate={{ x: [0, 4, 0] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+            className="text-[12px] leading-none text-ink/70"
+          >
+            →
+          </motion.span>
+        </motion.div>
+      )}
+    </AnimatePresence>
     <div
       ref={rowRef}
       data-lenis-prevent={expanded ? "" : undefined}
@@ -299,7 +323,7 @@ function ProjectRow({
           className={clsx(
             "group block shrink-0 transition-[width,height,max-width] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
             expanded
-              ? "w-[85vw] desk:w-[96vh] desk:max-w-[calc(100%_-_528px)] desk:h-[64vh] order-first desk:order-none"
+              ? "w-[92vw] desk:w-[96vh] desk:max-w-[calc(100%_-_528px)] desk:h-[64vh] order-first desk:order-none"
               : "w-full desk:w-[560px] desk:h-[420px] desk:max-w-none",
           )}
           aria-label={`${expanded ? "Collapse" : "Expand"} ${project.title}`}
@@ -349,7 +373,7 @@ function ProjectRow({
               transition={{ ...SIZE, delay: 0.18 + i * 0.06 }}
               className="shrink-0 desk:self-center"
             >
-              <div className="relative w-[85vw] aspect-[4/3] overflow-hidden bg-ink/[0.04] desk:w-[96vh] desk:max-w-[calc(100vw_-_528px)] desk:h-[64vh] desk:aspect-auto">
+              <div className="relative w-[92vw] aspect-[4/3] overflow-hidden bg-ink/[0.04] desk:w-[96vh] desk:max-w-[calc(100vw_-_528px)] desk:h-[64vh] desk:aspect-auto">
                 <SmartImage
                   src={src}
                   alt={`${project.title} ${i + 2}`}
@@ -368,7 +392,7 @@ function ProjectRow({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 60 }}
             transition={{ ...SIZE, delay: 0.18 + galleryRest.length * 0.06 }}
-            className="flex w-[85vw] h-[64vh] shrink-0 items-center justify-center bg-ink p-10 text-paper desk:w-[96vh] desk:max-w-[calc(100vw_-_528px)] desk:h-[64vh] desk:p-14"
+            className="flex w-[92vw] h-[64vh] shrink-0 items-center justify-center bg-ink p-10 text-paper desk:w-[96vh] desk:max-w-[calc(100vw_-_528px)] desk:h-[64vh] desk:p-14"
           >
             <blockquote className="max-w-[32ch]">
               <p className="text-[20px] leading-[1.3] tracking-tight desk:text-[24px]">
