@@ -18,6 +18,14 @@ export async function POST(req: NextRequest) {
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
   const key = `arengcon/${Date.now()}-${safeName}`;
   const bytes = new Uint8Array(await file.arrayBuffer());
-  const url = await uploadToR2(key, bytes, file.type);
-  return NextResponse.json({ url });
+  try {
+    const url = await uploadToR2(key, bytes, file.type);
+    return NextResponse.json({ url });
+  } catch (e) {
+    console.error("R2 upload failed", { key, size: bytes.byteLength, error: e });
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "R2 upload failed" },
+      { status: 500 },
+    );
+  }
 }
