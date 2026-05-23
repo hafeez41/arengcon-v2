@@ -7,7 +7,7 @@ import type { AdminUpdate } from "@/lib/admin-store";
 export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   if (!(await checkSession(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await context.params;
-  const updated: AdminUpdate = await req.json();
+  const updated = (await req.json()) as AdminUpdate;
   const list = await redis.get<AdminUpdate[]>(RKEYS.updates) ?? [];
   const idx = list.findIndex((u) => u.id === id);
   if (idx >= 0) list[idx] = updated;

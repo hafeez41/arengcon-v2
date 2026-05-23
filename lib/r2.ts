@@ -1,46 +1,44 @@
-import { AwsClient } from "aws4fetch";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 /**
- * Cloudflare R2 (S3-compatible) storage helper. Credentials come from env:
- *   R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY,
- *   R2_BUCKET, R2_PUBLIC_BASE_URL
+ * Cloudflare R2 storage helper. The bucket is bound natively as `R2` in
+ * wrangler.jsonc — no access keys, no SigV4. The only env var still needed
+ * is R2_PUBLIC_BASE_URL (the pub-*.r2.dev URL or custom domain) so we can
+ * build the public read URLs returned to callers.
  *
- * Uploads/deletes are signed SigV4 via aws4fetch (tiny, zero-dep). Public
- * reads happen over R2_PUBLIC_BASE_URL (the pub-*.r2.dev URL or a custom
- * domain) and cost nothing — egress on R2 is free.
+ * Public reads cost nothing — R2 egress is free.
  */
 
-const PUBLIC_BASE = (process.env.R2_PUBLIC_BASE_URL ?? "").replace(/\/$/, "");
-
-function client() {
-  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-  if (!accessKeyId || !secretAccessKey) {
-    throw new Error("R2 credentials missing (R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY)");
-  }
-  return new AwsClient({
-    accessKeyId,
-    secretAccessKey,
-    region: "auto",
-    service: "s3",
-  });
+// Minimal R2 binding shape — only what we actually call. Avoids pulling
+// the full @cloudflare/workers-types global declarations into the project,
+// which would override DOM Response.json() and break client fetch code.
+interface R2Binding {
+  put(
+    key: string,
+    body: ArrayBuffer | Uint8Array,
+    options?: { httpMetadata?: { contentType?: string } },
+  ): Promise<unknown>;
+  delete(key: string): Promise<void>;
 }
 
-function objectEndpoint(key: string): string {
-  const account = process.env.R2_ACCOUNT_ID;
-  const bucket = process.env.R2_BUCKET;
-  if (!account || !bucket) {
-    throw new Error("R2 config missing (R2_ACCOUNT_ID / R2_BUCKET)");
-  }
-  const safeKey = key.split("/").map(encodeURIComponent).join("/");
-  return `https://${account}.r2.cloudflarestorage.com/${bucket}/${safeKey}`;
+function publicBase(): string {
+  return (process.env.R2_PUBLIC_BASE_URL ?? "").replace(/\/$/, "");
+}
+
+function bucket(): R2Binding {
+  const env = getCloudflareContext().env as { R2?: R2Binding };
+  if (!env.R2) throw new Error("R2 binding missing (check wrangler.jsonc)");
+  return env.R2;
+}
+
+function publicUrl(key: string): string {
+  return `${publicBase()}/${key.split("/").map(encodeURIComponent).join("/")}`;
 }
 
 /** True if the URL is one we host on R2 (so cleanup ignores Unsplash/picsum/etc). */
 export function isR2Url(url: unknown): url is string {
-  return (
-    typeof url === "string" && PUBLIC_BASE.length > 0 && url.startsWith(PUBLIC_BASE)
-  );
+  const base = publicBase();
+  return typeof url === "string" && base.length > 0 && url.startsWith(base);
 }
 
 /** Upload bytes to R2 under `key`; returns the public URL. */
@@ -49,38 +47,23 @@ export async function uploadToR2(
   body: ArrayBuffer | Uint8Array,
   contentType: string,
 ): Promise<string> {
-  // R2 rejects chunked/aws-chunked uploads with 411 MissingContentLength —
-  // it requires a known Content-Length. Setting it explicitly (so aws4fetch
-  // signs it and the runtime sends a fixed-length body) is the fix.
-  const bytes =
-    body instanceof Uint8Array ? body : new Uint8Array(body);
-  const res = await client().fetch(objectEndpoint(key), {
-    method: "PUT",
-    body: bytes,
-    headers: {
-      "Content-Type": contentType || "application/octet-stream",
-      "Content-Length": String(bytes.byteLength),
-    },
+  const bytes = body instanceof Uint8Array ? body : new Uint8Array(body);
+  await bucket().put(key, bytes, {
+    httpMetadata: { contentType: contentType || "application/octet-stream" },
   });
-  if (!res.ok) {
-    throw new Error(`R2 upload failed (${res.status}): ${await res.text()}`);
-  }
-  return `${PUBLIC_BASE}/${key.split("/").map(encodeURIComponent).join("/")}`;
+  return publicUrl(key);
 }
 
 /** Delete one or more R2 objects by their public URL. Non-R2 URLs are skipped. */
 export async function deleteFromR2(urls: string | string[]): Promise<void> {
   const list = (Array.isArray(urls) ? urls : [urls]).filter(isR2Url);
   if (list.length === 0) return;
-  const aws = client();
+  const base = publicBase();
+  const b = bucket();
   await Promise.all(
     list.map(async (url) => {
-      const key = decodeURIComponent(url.slice(PUBLIC_BASE.length + 1));
-      const res = await aws.fetch(objectEndpoint(key), { method: "DELETE" });
-      // 404 is fine — already gone.
-      if (!res.ok && res.status !== 404) {
-        throw new Error(`R2 delete failed (${res.status}) for ${key}`);
-      }
+      const key = decodeURIComponent(url.slice(base.length + 1));
+      await b.delete(key);
     }),
   );
 }

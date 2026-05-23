@@ -12,7 +12,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   if (!(await checkSession(req)))
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const next: AdminAbout = await req.json();
+  const next = (await req.json()) as AdminAbout;
 
   // If the hero image was replaced (or cleared), free the old R2 object.
   const prev = await redis.get<AdminAbout>(RKEYS.about);

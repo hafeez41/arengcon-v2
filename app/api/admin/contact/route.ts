@@ -10,7 +10,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   if (!(await checkSession(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const contact: AdminContact = await req.json();
+  const contact = (await req.json()) as AdminContact;
   await redis.set(RKEYS.contact, contact);
   return NextResponse.json(contact);
 }

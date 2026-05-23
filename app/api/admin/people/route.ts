@@ -11,7 +11,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   if (!(await checkSession(req)))
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const person: AdminPerson = await req.json();
+  const person = (await req.json()) as AdminPerson;
   const list = (await redis.get<AdminPerson[]>(RKEYS.people)) ?? [];
   list.push(person);
   await redis.set(RKEYS.people, list);
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   if (!(await checkSession(req)))
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const list: AdminPerson[] = await req.json();
+  const list = (await req.json()) as AdminPerson[];
   await redis.set(RKEYS.people, list);
   return NextResponse.json({ ok: true });
 }

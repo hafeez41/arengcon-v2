@@ -11,7 +11,11 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   if (!(await checkSession(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { currentPassword, newEmail, newPassword } = await req.json();
+  const { currentPassword, newEmail, newPassword } = (await req.json()) as {
+    currentPassword: string;
+    newEmail?: string;
+    newPassword?: string;
+  };
   const creds = await getAdminCreds();
   if (!creds || hashPassword(currentPassword) !== creds.hash) {
     return NextResponse.json({ ok: false, error: "Current password is incorrect" });

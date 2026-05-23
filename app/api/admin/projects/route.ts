@@ -10,7 +10,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   if (!(await checkSession(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const project: AdminProject = await req.json();
+  const project = (await req.json()) as AdminProject;
   const list = await redis.get<AdminProject[]>(RKEYS.projects) ?? [];
   list.unshift(project);
   await redis.set(RKEYS.projects, list);
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 // by createdAt so this never changes what visitors see).
 export async function PUT(req: NextRequest) {
   if (!(await checkSession(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const list: AdminProject[] = await req.json();
+  const list = (await req.json()) as AdminProject[];
   if (!Array.isArray(list)) return NextResponse.json({ error: "Expected an array" }, { status: 400 });
   await redis.set(RKEYS.projects, list);
   return NextResponse.json({ ok: true });

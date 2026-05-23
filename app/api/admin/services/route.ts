@@ -11,7 +11,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   if (!(await checkSession(req)))
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const service: AdminService = await req.json();
+  const service = (await req.json()) as AdminService;
   const list = (await redis.get<AdminService[]>(RKEYS.services)) ?? [];
   list.push(service); // ordered list — append to the end
   await redis.set(RKEYS.services, list);
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   if (!(await checkSession(req)))
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const list: AdminService[] = await req.json();
+  const list = (await req.json()) as AdminService[];
   if (!Array.isArray(list))
     return NextResponse.json({ error: "Expected an array" }, { status: 400 });
   await redis.set(RKEYS.services, list);

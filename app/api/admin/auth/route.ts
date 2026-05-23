@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  const body = (await req.json()) as { action?: string; email?: string; password?: string };
 
   if (body.action === "logout") {
     const token = req.cookies.get(COOKIE_NAME)?.value;
@@ -22,10 +22,10 @@ export async function POST(req: NextRequest) {
     return res;
   }
 
-  const { email, password } = body as { email: string; password: string };
+  const { email, password } = body;
   const creds = await getAdminCreds();
 
-  if (!creds || email.trim().toLowerCase() !== creds.email.toLowerCase() || hashPassword(password) !== creds.hash) {
+  if (!creds || !email || !password || email.trim().toLowerCase() !== creds.email.toLowerCase() || hashPassword(password) !== creds.hash) {
     return NextResponse.json({ ok: false, error: "Invalid email or password" });
   }
 

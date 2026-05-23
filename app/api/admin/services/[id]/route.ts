@@ -11,7 +11,7 @@ export async function PUT(
   if (!(await checkSession(req)))
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await context.params;
-  const updated: AdminService = await req.json();
+  const updated = (await req.json()) as AdminService;
   const list = (await redis.get<AdminService[]>(RKEYS.services)) ?? [];
   const idx = list.findIndex((s) => s.id === id);
 
