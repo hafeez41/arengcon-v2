@@ -1,5 +1,6 @@
 "use client";
 
+import { materializeUrl, materializeUrls } from "@/lib/image-upload";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -170,7 +171,9 @@ export function ProjectsSection({ projects }: { projects: AdminProject[] }) {
             project={editing}
             onClose={() => setEditing(null)}
             onSave={async (p) => {
-              await upsertProject(p);
+              const hero = (await materializeUrl(p.hero)) ?? "";
+              const gallery = await materializeUrls(p.gallery);
+              await upsertProject({ ...p, hero, gallery });
               setEditing(null);
             }}
           />

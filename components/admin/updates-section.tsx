@@ -1,5 +1,6 @@
 "use client";
 
+import { materializeUrl } from "@/lib/image-upload";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -152,7 +153,8 @@ export function UpdatesSection({ updates }: { updates: AdminUpdate[] }) {
             update={editing}
             onClose={() => setEditing(null)}
             onSave={async (u) => {
-              await upsertUpdate(u);
+              const hero = u.hero ? await materializeUrl(u.hero) : undefined;
+              await upsertUpdate({ ...u, hero });
               setEditing(null);
             }}
           />

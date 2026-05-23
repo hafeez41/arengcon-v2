@@ -1,5 +1,6 @@
 "use client";
 
+import { materializeUrl } from "@/lib/image-upload";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -146,7 +147,8 @@ export function ServicesSection({ services }: { services: AdminService[] }) {
             service={editing}
             onClose={() => setEditing(null)}
             onSave={async (s) => {
-              await upsertService(s);
+              const image = (await materializeUrl(s.image)) ?? "";
+              await upsertService({ ...s, image });
               setEditing(null);
             }}
           />

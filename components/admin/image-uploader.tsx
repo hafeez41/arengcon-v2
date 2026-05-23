@@ -4,16 +4,11 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { compressImage } from "@/lib/image-compress";
 
+// Defer the R2 upload until the parent form is saved. Pick just produces
+// a compressed WebP data URL for local preview; lib/image-upload.ts walks
+// the draft at save time and materializes any data: URLs into real R2 URLs.
 async function uploadToBlob(file: File): Promise<string> {
-  const compressed = await compressImage(file);
-  const res = await fetch(compressed);
-  const blob = await res.blob();
-  const form = new FormData();
-  form.append("file", new File([blob], `${Date.now()}.webp`, { type: "image/webp" }));
-  const uploadRes = await fetch("/api/admin/upload", { method: "POST", body: form });
-  if (!uploadRes.ok) throw new Error("Upload failed");
-  const { url } = await uploadRes.json();
-  return url as string;
+  return await compressImage(file);
 }
 
 export function ImageUploader({

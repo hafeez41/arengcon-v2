@@ -1,5 +1,6 @@
 "use client";
 
+import { materializeUrl } from "@/lib/image-upload";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -46,9 +47,10 @@ export function AboutSection({ about }: { about: AdminAbout | null }) {
   const onSave = async () => {
     setSaving(true);
     try {
+      const heroImage = (await materializeUrl(draft.heroImage)) ?? "";
       const cleaned: AdminAbout = {
         intro: draft.intro.trim(),
-        heroImage: draft.heroImage ?? "",
+        heroImage,
         mission: draft.mission.trim(),
         vision: draft.vision.trim(),
         values: draft.values

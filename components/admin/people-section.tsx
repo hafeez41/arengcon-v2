@@ -1,5 +1,6 @@
 "use client";
 
+import { materializeUrl } from "@/lib/image-upload";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -147,7 +148,8 @@ export function PeopleSection({ people }: { people: AdminPerson[] }) {
             person={editing}
             onClose={() => setEditing(null)}
             onSave={async (p) => {
-              await upsertPerson(p);
+              const photo = (await materializeUrl(p.photo)) ?? "";
+              await upsertPerson({ ...p, photo });
               setEditing(null);
             }}
           />
