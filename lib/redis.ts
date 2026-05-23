@@ -1,16 +1,26 @@
 import { Redis } from "@upstash/redis";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-// Lazy-init the client. On Cloudflare Workers, process.env is populated
-// per-request by OpenNext — constructing at module load can capture undefined
-// values. A Proxy lets every `redis.*` call resolve the real client on first
-// use, after env vars are available.
+// Read env from the Cloudflare context (Worker bindings/secrets), not
+// process.env — the latter isn't reliably populated at request time under
+// OpenNext. Client is lazy-constructed per request via a Proxy.
 
 let _redis: Redis | null = null;
 
+function readEnv(): { url?: string; token?: string } {
+  const env = getCloudflareContext().env as {
+    UPSTASH_REDIS_REST_URL?: string;
+    UPSTASH_REDIS_REST_TOKEN?: string;
+  };
+  return {
+    url: env.UPSTASH_REDIS_REST_URL ?? process.env.UPSTASH_REDIS_REST_URL,
+    token: env.UPSTASH_REDIS_REST_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN,
+  };
+}
+
 function getClient(): Redis {
   if (_redis) return _redis;
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const { url, token } = readEnv();
   if (!url || !token) {
     throw new Error(
       "Upstash Redis env vars missing (UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN)",
