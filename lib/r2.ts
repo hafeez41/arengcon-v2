@@ -23,8 +23,10 @@ interface R2Binding {
 
 function publicBase(): string {
   const env = getCloudflareContext().env as { R2_PUBLIC_BASE_URL?: string };
-  const url = env.R2_PUBLIC_BASE_URL ?? process.env.R2_PUBLIC_BASE_URL ?? "";
-  return url.replace(/\/$/, "");
+  const raw = env.R2_PUBLIC_BASE_URL ?? process.env.R2_PUBLIC_BASE_URL ?? "";
+  // Defensive: strip surrounding quotes (common copy-paste error in secret
+  // values) and trailing slashes before building public URLs.
+  return raw.trim().replace(/^["']|["']$/g, "").replace(/\/$/, "");
 }
 
 function bucket(): R2Binding {
