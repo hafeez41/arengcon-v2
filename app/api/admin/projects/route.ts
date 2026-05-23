@@ -17,8 +17,8 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(project);
 }
 
-// Persist a reordered list (admin-only organization; the public site sorts
-// by createdAt so this never changes what visitors see).
+// Persist a reordered list. The public site mirrors this order so visitors
+// see whatever arrangement the admin chose.
 export async function PUT(req: NextRequest) {
   if (!(await checkSession(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const list = (await req.json()) as AdminProject[];

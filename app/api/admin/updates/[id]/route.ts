@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { deleteFromR2 } from "@/lib/r2";
+import { deleteFromR2, isR2Url } from "@/lib/r2";
 import { kv, RKEYS } from "@/lib/db";
 import { checkSession } from "@/lib/session";
 import type { AdminUpdate } from "@/lib/admin-store";
@@ -10,8 +10,17 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
   const updated = (await req.json()) as AdminUpdate;
   const list = await kv.get<AdminUpdate[]>(RKEYS.updates) ?? [];
   const idx = list.findIndex((u) => u.id === id);
-  if (idx >= 0) list[idx] = updated;
-  else list.unshift(updated);
+
+  if (idx >= 0) {
+    // Free the previous hero image from R2 if it was swapped out.
+    const prev = list[idx];
+    if (prev.hero && isR2Url(prev.hero) && prev.hero !== updated.hero) {
+      await deleteFromR2(prev.hero);
+    }
+    list[idx] = updated;
+  } else {
+    list.unshift(updated);
+  }
   await kv.set(RKEYS.updates, list);
   return NextResponse.json(updated);
 }
