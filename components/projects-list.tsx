@@ -299,7 +299,7 @@ function ProjectRow({
           className={clsx(
             "group block shrink-0 transition-[width,height,max-width] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
             expanded
-              ? "w-[85vw] h-[64vh] desk:w-[96vh] desk:max-w-[calc(100%_-_528px)] desk:h-[64vh] order-first desk:order-none"
+              ? "w-[85vw] desk:w-[96vh] desk:max-w-[calc(100%_-_528px)] desk:h-[64vh] order-first desk:order-none"
               : "w-full desk:w-[560px] desk:h-[420px] desk:max-w-none",
           )}
           aria-label={`${expanded ? "Collapse" : "Expand"} ${project.title}`}
@@ -328,7 +328,7 @@ function ProjectRow({
             !expanded && "pointer-events-none select-none",
           )}
         >
-          <div className="w-[280px] px-5 py-6 max-h-[64vh] overflow-y-auto desk:max-h-[64vh]">
+          <div className="w-[280px] px-5 py-6 max-h-[40vh] overflow-y-auto desk:max-h-[64vh]">
             <p className="text-[13.5px] leading-[1.65]">{project.summary}</p>
             <div className="mt-5 space-y-3 text-[13px] leading-[1.65] text-ink/85">
               {project.description.map((para, i) => (
@@ -349,7 +349,7 @@ function ProjectRow({
               transition={{ ...SIZE, delay: 0.18 + i * 0.06 }}
               className="shrink-0 desk:self-center"
             >
-              <div className="relative w-[85vw] h-[64vh] overflow-hidden bg-ink/[0.04] desk:w-[96vh] desk:max-w-[calc(100vw_-_528px)] desk:h-[64vh]">
+              <div className="relative w-[85vw] aspect-[4/3] overflow-hidden bg-ink/[0.04] desk:w-[96vh] desk:max-w-[calc(100vw_-_528px)] desk:h-[64vh] desk:aspect-auto">
                 <SmartImage
                   src={src}
                   alt={`${project.title} ${i + 2}`}
