@@ -11,6 +11,13 @@
   "r2_buckets": [
     { "binding": "R2", "bucket_name": "arengcon" }
   ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "arengcon",
+      "database_id": "30a2519c-c28c-4809-9283-71f6800df235"
+    }
+  ],
   "observability": {
     "enabled": true
   }
