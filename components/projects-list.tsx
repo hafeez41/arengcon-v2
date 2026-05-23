@@ -304,7 +304,7 @@ function ProjectRow({
           )}
           aria-label={`${expanded ? "Collapse" : "Expand"} ${project.title}`}
         >
-          <div className="relative w-full h-full overflow-hidden bg-ink/[0.04] aspect-[4/3]">
+          <div className="relative w-full overflow-hidden bg-ink/[0.04] aspect-[4/3] desk:h-full desk:aspect-auto">
             <SmartImage
               src={project.image}
               alt={project.title}
