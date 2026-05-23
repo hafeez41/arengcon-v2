@@ -1,5 +1,5 @@
 import { createHash } from "crypto";
-import { redis, RKEYS } from "./redis";
+import { kv, RKEYS } from "./db";
 
 export type StoredCreds = { email: string; hash: string };
 
@@ -8,7 +8,7 @@ export function hashPassword(password: string): string {
 }
 
 export async function getAdminCreds(): Promise<StoredCreds | null> {
-  const stored = await redis.get<StoredCreds>(RKEYS.credentials);
+  const stored = await kv.get<StoredCreds>(RKEYS.credentials);
   if (stored) return stored;
 
   const email = process.env.ADMIN_DEFAULT_EMAIL;
@@ -16,6 +16,6 @@ export async function getAdminCreds(): Promise<StoredCreds | null> {
   if (!email || !password) return null;
 
   const fresh: StoredCreds = { email, hash: hashPassword(password) };
-  await redis.set(RKEYS.credentials, fresh);
+  await kv.set(RKEYS.credentials, fresh);
   return fresh;
 }

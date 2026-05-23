@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { redis, RKEYS } from "@/lib/redis";
+import { kv, RKEYS } from "@/lib/db";
 import { checkSession } from "@/lib/session";
 import { hashPassword, getAdminCreds, type StoredCreds } from "@/lib/auth-utils";
 
@@ -24,6 +24,6 @@ export async function PUT(req: NextRequest) {
     email: newEmail?.trim() || creds.email,
     hash: newPassword ? hashPassword(newPassword) : creds.hash,
   };
-  await redis.set(RKEYS.credentials, next);
+  await kv.set(RKEYS.credentials, next);
   return NextResponse.json({ ok: true });
 }

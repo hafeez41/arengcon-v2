@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { redis, RKEYS } from "@/lib/redis";
+import { kv, RKEYS } from "@/lib/db";
 import { COOKIE_NAME, SESSION_TTL } from "@/lib/session";
 import { hashPassword, getAdminCreds } from "@/lib/auth-utils";
 
 export async function GET(req: NextRequest) {
   const token = req.cookies.get(COOKIE_NAME)?.value;
   if (!token) return NextResponse.json({ ok: false });
-  const val = await redis.get(RKEYS.session(token));
+  const val = await kv.get(RKEYS.session(token));
   return NextResponse.json({ ok: val !== null });
 }
 
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
   if (body.action === "logout") {
     const token = req.cookies.get(COOKIE_NAME)?.value;
-    if (token) await redis.del(RKEYS.session(token));
+    if (token) await kv.del(RKEYS.session(token));
     const res = NextResponse.json({ ok: true });
     res.cookies.delete(COOKIE_NAME);
     return res;
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   }
 
   const token = randomUUID();
-  await redis.set(RKEYS.session(token), "1", { ex: SESSION_TTL });
+  await kv.set(RKEYS.session(token), "1", { ex: SESSION_TTL });
 
   const res = NextResponse.json({ ok: true });
   res.cookies.set(COOKIE_NAME, token, {

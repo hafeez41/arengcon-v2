@@ -1,8 +1,8 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 /**
- * Drop-in KV shim backed by Cloudflare D1. Keeps the original
- * `redis.get / set / del` surface so call sites don't change.
+ * KV shim backed by Cloudflare D1. Exposes the small surface the app uses —
+ * `kv.get / set / del` — over a single `kv(k, v, expires_at)` table.
  *
  * Schema (one-time, run in D1 console):
  *   CREATE TABLE IF NOT EXISTS kv (
@@ -12,9 +12,6 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
  *   );
  */
 
-// Minimal D1 binding shape — only what we use, declared locally so the
-// global Workers types don't override DOM Response.json() and break client
-// code (same approach as lib/r2.ts).
 interface D1PreparedStatement {
   bind(...values: unknown[]): D1PreparedStatement;
   first<T = unknown>(): Promise<T | null>;
@@ -53,6 +50,17 @@ interface SetOptions {
   ex?: number;
 }
 
+async function sweepExpired(): Promise<void> {
+  // Cheap opportunistic cleanup — runs when a TTL row is set, deletes a
+  // capped batch of expired rows. D1 has no native TTL so we sweep manually.
+  await db()
+    .prepare(
+      "DELETE FROM kv WHERE k IN (SELECT k FROM kv WHERE expires_at IS NOT NULL AND expires_at < ?1 LIMIT 100)",
+    )
+    .bind(nowSec())
+    .run();
+}
+
 async function set(
   key: string,
   value: unknown,
@@ -64,13 +72,17 @@ async function set(
     .prepare("INSERT OR REPLACE INTO kv (k, v, expires_at) VALUES (?1, ?2, ?3)")
     .bind(key, v, expiresAt)
     .run();
+  if (expiresAt !== null) {
+    // Fire-and-forget: don't block the response on sweep.
+    sweepExpired().catch(() => {});
+  }
 }
 
 async function del(key: string): Promise<void> {
   await db().prepare("DELETE FROM kv WHERE k = ?1").bind(key).run();
 }
 
-export const redis = { get, set, del };
+export const kv = { get, set, del };
 
 export const RKEYS = {
   projects:    "arengcon:projects",

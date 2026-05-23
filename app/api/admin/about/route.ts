@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { redis, RKEYS } from "@/lib/redis";
+import { kv, RKEYS } from "@/lib/db";
 import { checkSession } from "@/lib/session";
 import { deleteFromR2, isR2Url } from "@/lib/r2";
 import type { AdminAbout } from "@/lib/admin-store";
 
 export async function GET() {
-  const about = await redis.get<AdminAbout>(RKEYS.about);
+  const about = await kv.get<AdminAbout>(RKEYS.about);
   return NextResponse.json(about ?? null);
 }
 
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   const next = (await req.json()) as AdminAbout;
 
   // If the hero image was replaced (or cleared), free the old R2 object.
-  const prev = await redis.get<AdminAbout>(RKEYS.about);
+  const prev = await kv.get<AdminAbout>(RKEYS.about);
   if (
     prev?.heroImage &&
     isR2Url(prev.heroImage) &&
@@ -24,6 +24,6 @@ export async function POST(req: NextRequest) {
     await deleteFromR2(prev.heroImage);
   }
 
-  await redis.set(RKEYS.about, next);
+  await kv.set(RKEYS.about, next);
   return NextResponse.json(next);
 }

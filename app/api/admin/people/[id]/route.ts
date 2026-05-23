@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { deleteFromR2, isR2Url } from "@/lib/r2";
-import { redis, RKEYS } from "@/lib/redis";
+import { kv, RKEYS } from "@/lib/db";
 import { checkSession } from "@/lib/session";
 import type { AdminPerson } from "@/lib/admin-store";
 
@@ -12,7 +12,7 @@ export async function PUT(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await context.params;
   const updated = (await req.json()) as AdminPerson;
-  const list = (await redis.get<AdminPerson[]>(RKEYS.people)) ?? [];
+  const list = (await kv.get<AdminPerson[]>(RKEYS.people)) ?? [];
   const idx = list.findIndex((p) => p.id === id);
   if (idx >= 0) {
     const prev = list[idx];
@@ -24,7 +24,7 @@ export async function PUT(
   } else {
     list.push(updated);
   }
-  await redis.set(RKEYS.people, list);
+  await kv.set(RKEYS.people, list);
   return NextResponse.json(updated);
 }
 
@@ -35,14 +35,14 @@ export async function DELETE(
   if (!(await checkSession(req)))
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await context.params;
-  const list = (await redis.get<AdminPerson[]>(RKEYS.people)) ?? [];
+  const list = (await kv.get<AdminPerson[]>(RKEYS.people)) ?? [];
   const target = list.find((p) => p.id === id);
 
   if (target?.photo) {
     await deleteFromR2(target.photo); // ignores non-R2 URLs internally
   }
 
-  await redis.set(
+  await kv.set(
     RKEYS.people,
     list.filter((p) => p.id !== id),
   );
