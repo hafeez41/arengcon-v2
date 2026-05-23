@@ -2,12 +2,15 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 /**
  * Cloudflare R2 storage helper. The bucket is bound natively as `R2` in
- * wrangler.jsonc — no access keys, no SigV4. The only env var still needed
- * is R2_PUBLIC_BASE_URL (the pub-*.r2.dev URL or custom domain) so we can
- * build the public read URLs returned to callers.
+ * wrangler.jsonc — no access keys, no SigV4.
  *
- * Public reads cost nothing — R2 egress is free.
+ * The public read URL is hardcoded below. It's bucket-specific (Cloudflare
+ * mints one when you enable public access) but not secret — anyone can
+ * fetch from it. If you ever swap the bucket or attach a custom domain
+ * (e.g. cdn.arengcon.com), change the constant. Public reads are free.
  */
+
+const PUBLIC_BASE = "https://pub-5fede95dd7c046d0b6bf4e690cfcbdd4.r2.dev";
 
 // Minimal R2 binding shape — only what we actually call. Avoids pulling
 // the full @cloudflare/workers-types global declarations into the project,
@@ -21,14 +24,6 @@ interface R2Binding {
   delete(key: string): Promise<void>;
 }
 
-function publicBase(): string {
-  const env = getCloudflareContext().env as { R2_PUBLIC_BASE_URL?: string };
-  const raw = env.R2_PUBLIC_BASE_URL ?? process.env.R2_PUBLIC_BASE_URL ?? "";
-  // Defensive: strip surrounding quotes (common copy-paste error in secret
-  // values) and trailing slashes before building public URLs.
-  return raw.trim().replace(/^["']|["']$/g, "").replace(/\/$/, "");
-}
-
 function bucket(): R2Binding {
   const env = getCloudflareContext().env as { R2?: R2Binding };
   if (!env.R2) throw new Error("R2 binding missing (check wrangler.jsonc)");
@@ -36,13 +31,12 @@ function bucket(): R2Binding {
 }
 
 function publicUrl(key: string): string {
-  return `${publicBase()}/${key.split("/").map(encodeURIComponent).join("/")}`;
+  return `${PUBLIC_BASE}/${key.split("/").map(encodeURIComponent).join("/")}`;
 }
 
 /** True if the URL is one we host on R2 (so cleanup ignores Unsplash/picsum/etc). */
 export function isR2Url(url: unknown): url is string {
-  const base = publicBase();
-  return typeof url === "string" && base.length > 0 && url.startsWith(base);
+  return typeof url === "string" && url.startsWith(PUBLIC_BASE);
 }
 
 /** Upload bytes to R2 under `key`; returns the public URL. */
@@ -62,11 +56,10 @@ export async function uploadToR2(
 export async function deleteFromR2(urls: string | string[]): Promise<void> {
   const list = (Array.isArray(urls) ? urls : [urls]).filter(isR2Url);
   if (list.length === 0) return;
-  const base = publicBase();
   const b = bucket();
   await Promise.all(
     list.map(async (url) => {
-      const key = decodeURIComponent(url.slice(base.length + 1));
+      const key = decodeURIComponent(url.slice(PUBLIC_BASE.length + 1));
       await b.delete(key);
     }),
   );
