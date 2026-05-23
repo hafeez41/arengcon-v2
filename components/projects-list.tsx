@@ -250,7 +250,7 @@ function ProjectRow({
           className={clsx(
             "shrink-0 transition-[width] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
             expanded
-              ? "px-5 pt-6 pb-2 max-h-[64vh] overflow-y-auto desk:w-[200px] desk:max-h-[64vh] desk:px-8 desk:py-6"
+              ? "px-5 pt-3 pb-2 max-h-[40vh] overflow-y-auto desk:w-[200px] desk:max-h-[64vh] desk:px-8 desk:py-6"
               : "w-full desk:w-[280px]",
           )}
         >
@@ -278,7 +278,7 @@ function ProjectRow({
             )}
           >
             <div className="min-h-0 overflow-hidden">
-              <dl className="mt-10 space-y-5">
+              <dl className="mt-5 space-y-3 desk:mt-10 desk:space-y-5">
                 <Meta label="Client" value={project.client} />
                 <Meta label="Typology" value={cat.name} />
                 <Meta label="Size m²/ft²" value={project.size} />
