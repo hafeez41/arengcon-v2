@@ -47,6 +47,7 @@ export const SUBCATEGORIES: Record<Category, { slug: string; label: string }[]> 
   arch: [
     { slug: "villas", label: "Villas" },
     { slug: "apartments", label: "Apartments" },
+    { slug: "townhouses", label: "Townhouses" },
     { slug: "terraces", label: "Terraces" },
     { slug: "commercials", label: "Commercials" },
     { slug: "administratives", label: "Administratives" },
