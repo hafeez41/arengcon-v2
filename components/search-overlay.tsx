@@ -3,11 +3,16 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CATEGORY_LABELS } from "@/lib/projects";
-import { useEffectiveProjects, useEffectiveUpdates } from "@/lib/effective-data";
+import {
+  useEffectiveProjects,
+  useEffectiveUpdates,
+  useEffectivePeople,
+  useEffectiveServices,
+} from "@/lib/effective-data";
 import { useNavigate } from "./spa-router";
 
 type Result = {
-  type: "Project" | "Update";
+  type: "Project" | "Update" | "Person" | "Service";
   href: string;
   title: string;
   meta: string;
@@ -26,6 +31,8 @@ export function SearchOverlay({
   const navigate = useNavigate();
   const { list: projectList } = useEffectiveProjects();
   const { list: updateList } = useEffectiveUpdates();
+  const { list: peopleList } = useEffectivePeople();
+  const { list: serviceList } = useEffectiveServices();
 
   useEffect(() => {
     if (open) {
@@ -61,7 +68,8 @@ export function SearchOverlay({
     });
     const updateResults: Result[] = updateList.map((u) => ({
       type: "Update",
-      href: `/updates/${u.slug}`,
+      // No /updates/[slug] route exists — clicking lands on the list page.
+      href: `/updates`,
       title: u.title,
       meta: `${u.kind} · ${new Date(u.date).getFullYear()}`,
       haystack: [
@@ -75,7 +83,26 @@ export function SearchOverlay({
         .join(" ")
         .toLowerCase(),
     }));
-    const all = [...projectResults, ...updateResults];
+    const peopleResults: Result[] = peopleList.map((p) => ({
+      type: "Person",
+      href: `/people`,
+      title: p.name,
+      meta: p.role || "Team",
+      haystack: [p.name, p.role, p.bio].filter(Boolean).join(" ").toLowerCase(),
+    }));
+    const serviceResults: Result[] = serviceList.map((s) => ({
+      type: "Service",
+      href: `/services`,
+      title: s.title,
+      meta: "Service",
+      haystack: [s.title, s.desc].filter(Boolean).join(" ").toLowerCase(),
+    }));
+    const all = [
+      ...projectResults,
+      ...updateResults,
+      ...peopleResults,
+      ...serviceResults,
+    ];
     const needle = q.trim().toLowerCase();
     if (!needle) return all;
     // Match every whitespace-separated term (AND search) anywhere in the
@@ -139,7 +166,7 @@ export function SearchOverlay({
               ) : (
                 <ul className="divide-y divide-line">
                   {results.map((r) => (
-                    <li key={r.href}>
+                    <li key={`${r.type}:${r.href}:${r.title}`}>
                       <button
                         onClick={() => {
                           onClose();

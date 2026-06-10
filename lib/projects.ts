@@ -48,7 +48,7 @@ export const SUBCATEGORIES: Record<Category, { slug: string; label: string }[]> 
     { slug: "villas", label: "Villas" },
     { slug: "apartments", label: "Apartments" },
     { slug: "townhouses", label: "Townhouses" },
-    { slug: "terraces", label: "Terraces" },
+    { slug: "hotels", label: "Hotels" },
     { slug: "commercials", label: "Commercials" },
     { slug: "administratives", label: "Administratives" },
     { slug: "educationals", label: "Educationals" },

@@ -148,7 +148,6 @@ export function Header() {
     if (footer) {
       footer.scrollIntoView({ behavior: "smooth" });
     }
-    window.dispatchEvent(new CustomEvent("arengcon:open-contact"));
   };
 
   // On desktop, show hamburger instead of side rail only while an expanded

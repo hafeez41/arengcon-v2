@@ -274,7 +274,7 @@ function ProjectRow({
           className={clsx(
             "shrink-0 transition-[width] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
             expanded
-              ? "px-5 pt-3 pb-2 max-h-[40vh] overflow-y-auto desk:w-[200px] desk:max-h-[64vh] desk:px-8 desk:py-6"
+              ? "px-5 pt-3 pb-2 max-h-[55vh] overflow-y-auto desk:w-[260px] desk:max-h-[64vh] desk:px-8 desk:py-6"
               : "w-full desk:w-[280px]",
           )}
         >
@@ -285,11 +285,14 @@ function ProjectRow({
             aria-expanded={expanded}
           >
             <Pictogram />
-            <h3 className="mt-5 text-[17px] leading-[1.25] tracking-tight desk:text-[18px]">
+            <h3 className="mt-4 text-[20px] leading-[1.15] tracking-tight desk:text-[24px]">
               {project.title}
             </h3>
-            <div className="mt-2 text-[10.5px] uppercase tracking-[0.14em] text-muted">
+            <div className="mt-2.5 text-[10.5px] uppercase leading-none tracking-[0.14em] text-muted">
               {project.location}
+            </div>
+            <div className="mt-1.5 text-[10.5px] uppercase leading-none tracking-[0.14em] tabnum text-muted">
+              {project.year}
             </div>
           </button>
 
@@ -302,14 +305,14 @@ function ProjectRow({
             )}
           >
             <div className="min-h-0 overflow-hidden">
-              <dl className="mt-5 space-y-3 desk:mt-10 desk:space-y-5">
+              <dl className="mt-1.5 space-y-1">
                 <Meta label="Client" value={project.client} />
                 <Meta label="Typology" value={cat.name} />
                 <Meta label="Size m²/ft²" value={project.size} />
                 <Meta label="Status" value={project.status} />
-                <div className="pt-3">
-                  <div className="text-[10px] uppercase tracking-[0.14em] text-muted">Share</div>
-                  <ShareRow title={project.title} />
+                <div className="pt-2">
+                  <div className="text-[12px] uppercase tracking-[0.18em] text-muted">Share</div>
+                  <ShareRow title={project.title} slug={project.slug} />
                 </div>
               </dl>
             </div>
@@ -323,7 +326,7 @@ function ProjectRow({
           className={clsx(
             "group block shrink-0 transition-[width,height,max-width] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
             expanded
-              ? "w-[92vw] desk:w-[96vh] desk:max-w-[calc(100%_-_528px)] desk:h-[64vh] order-first desk:order-none"
+              ? "w-[92vw] desk:w-[96vh] desk:max-w-[calc(100%_-_588px)] desk:h-[64vh] order-first desk:order-none"
               : "w-full desk:w-[560px] desk:h-[420px] desk:max-w-none",
           )}
           aria-label={`${expanded ? "Collapse" : "Expand"} ${project.title}`}
@@ -336,6 +339,16 @@ function ProjectRow({
               sizes="(max-width: 1400px) 85vw, calc(100vw - 530px)"
               className="object-contain transition-transform duration-[1.2s] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.02]"
             />
+            {/* OPEN PROJECT call-out — only on the collapsed tile. Always
+                visible on mobile; fades from 40% to 100% on desktop hover. */}
+            {!expanded && (
+              <span
+                aria-hidden
+                className="pointer-events-none absolute left-1/2 top-1/2 flex h-11 w-36 -translate-x-1/2 -translate-y-1/2 items-center justify-center bg-paper/85 text-[10.5px] uppercase tracking-[0.18em] text-ink backdrop-blur-[2px] transition-opacity duration-300 desk:opacity-40 desk:group-hover:opacity-100"
+              >
+                Open Project
+              </span>
+            )}
           </div>
         </button>
 
@@ -373,7 +386,7 @@ function ProjectRow({
               transition={{ ...SIZE, delay: 0.18 + i * 0.06 }}
               className="shrink-0 desk:self-center"
             >
-              <div className="relative w-[92vw] aspect-[4/3] overflow-hidden bg-ink/[0.04] desk:w-[96vh] desk:max-w-[calc(100vw_-_528px)] desk:h-[64vh] desk:aspect-auto">
+              <div className="relative w-[92vw] aspect-[4/3] overflow-hidden bg-ink/[0.04] desk:w-[96vh] desk:max-w-[calc(100vw_-_588px)] desk:h-[64vh] desk:aspect-auto">
                 <SmartImage
                   src={src}
                   alt={`${project.title} ${i + 2}`}
@@ -392,7 +405,7 @@ function ProjectRow({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 60 }}
             transition={{ ...SIZE, delay: 0.18 + galleryRest.length * 0.06 }}
-            className="flex w-[92vw] h-[64vh] shrink-0 items-center justify-center bg-ink p-10 text-paper desk:w-[96vh] desk:max-w-[calc(100vw_-_528px)] desk:h-[64vh] desk:p-14"
+            className="flex w-[92vw] h-[64vh] shrink-0 items-center justify-center bg-ink p-10 text-paper desk:w-[96vh] desk:max-w-[calc(100vw_-_588px)] desk:h-[64vh] desk:p-14"
           >
             <blockquote className="max-w-[32ch]">
               <p className="text-[20px] leading-[1.3] tracking-tight desk:text-[24px]">
@@ -470,43 +483,121 @@ function Pictogram() {
 function Meta({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[9px] uppercase tracking-[0.2em] text-muted">
+      <dt className="text-[12px] uppercase tracking-[0.18em] leading-none text-muted">
         {label}
       </dt>
-      <dd className="mt-2 text-[13px] tracking-tight text-ink">{value}</dd>
+      <dd className="mt-0.5 text-[14px] leading-snug tracking-tight text-ink">
+        {value}
+      </dd>
     </div>
   );
 }
 
-function ShareRow({ title }: { title: string }) {
-  const url = `mailto:?subject=${encodeURIComponent(title)}`;
-  return (
-    <div className="mt-3 flex items-center gap-2">
-      <a
-        href={url}
-        aria-label="Email"
-        className="grid h-7 w-7 place-items-center bg-ink/[0.06] text-muted transition-colors hover:bg-ink hover:text-paper"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-          <rect x="3" y="5" width="18" height="14" rx="1" />
-          <path d="m4 6 8 7 8-7" />
+function ShareRow({ title, slug }: { title: string; slug: string }) {
+  const [copied, setCopied] = useState(false);
+
+  // Project detail page URL. SSR-safe: falls back to the canonical host.
+  const url =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/projects/${slug}`
+      : `https://arengcon.com/projects/${slug}`;
+  const u = encodeURIComponent(url);
+  const t = encodeURIComponent(title);
+
+  const shares: { label: string; href: string; glyph: React.ReactNode }[] = [
+    {
+      label: "Facebook",
+      href: `https://www.facebook.com/sharer/sharer.php?u=${u}`,
+      glyph: (
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+          <path d="M24 12.07C24 5.41 18.63 0 12 0S0 5.41 0 12.07c0 6.02 4.39 11 10.13 11.93v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.69.23 2.69.23v2.96H15.83c-1.49 0-1.96.93-1.96 1.89v2.27h3.33l-.53 3.49h-2.8V24C19.61 23.07 24 18.09 24 12.07z" />
         </svg>
-      </a>
-      {[
-        { label: "Facebook", glyph: "f" },
-        { label: "LinkedIn", glyph: "in" },
-        { label: "X", glyph: "X" },
-      ].map(({ label, glyph }) => (
+      ),
+    },
+    {
+      label: "LinkedIn",
+      href: `https://www.linkedin.com/sharing/share-offsite/?url=${u}`,
+      glyph: (
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+          <path d="M19 0H5C2.24 0 0 2.24 0 5v14c0 2.76 2.24 5 5 5h14c2.76 0 5-2.24 5-5V5c0-2.76-2.24-5-5-5zM7.27 18.27H4.5V9.73h2.77v8.54zM5.88 8.45c-.89 0-1.6-.72-1.6-1.6s.72-1.6 1.6-1.6c.89 0 1.6.72 1.6 1.6s-.71 1.6-1.6 1.6zm13.27 9.82h-2.77V14c0-.95-.02-2.18-1.33-2.18-1.33 0-1.53 1.04-1.53 2.11v4.34h-2.77V9.73h2.66v1.16h.04c.37-.7 1.27-1.43 2.62-1.43 2.81 0 3.33 1.85 3.33 4.25v4.56z" />
+        </svg>
+      ),
+    },
+    {
+      label: "X",
+      href: `https://twitter.com/intent/tweet?url=${u}&text=${t}`,
+      glyph: (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+        </svg>
+      ),
+    },
+    {
+      label: "WhatsApp",
+      href: `https://wa.me/?text=${t}%20${u}`,
+      glyph: (
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+          <path d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-1.7-.8-2.8-1.5-3.9-3.4-.3-.5.3-.5.8-1.5.1-.2 0-.4 0-.5s-.7-1.5-.9-2.1c-.2-.6-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.4-.2.3-1 .9-1 2.3s.9 2.7 1.1 2.9c.2.2 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4-.1-.1-.2-.2-.5-.3zM12 0C5.4 0 0 5.4 0 12c0 2.1.6 4.1 1.5 5.8L0 24l6.4-1.5c1.7.9 3.6 1.5 5.6 1.5 6.6 0 12-5.4 12-12S18.6 0 12 0zm0 21.8c-1.8 0-3.5-.5-5-1.3l-.4-.2-3.7.9.9-3.6-.2-.4c-.9-1.5-1.4-3.3-1.4-5.1 0-5.4 4.4-9.8 9.8-9.8s9.8 4.4 9.8 9.8-4.4 9.7-9.8 9.7z" />
+        </svg>
+      ),
+    },
+  ];
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard perms can fail in some embedded contexts — silently ignore.
+    }
+  };
+
+  return (
+    <div className="mt-2 flex flex-col gap-1.5">
+      <div className="flex items-center gap-2">
+        {shares.map(({ label, href, glyph }) => (
+          <a
+            key={label}
+            href={href}
+            target="_blank"
+            rel="noreferrer noopener"
+            aria-label={`Share on ${label}`}
+            className="grid h-7 w-7 place-items-center bg-ink/[0.06] text-muted transition-colors hover:bg-ink hover:text-paper"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {glyph}
+          </a>
+        ))}
         <button
-          key={label}
-          aria-label={label}
-          className="grid h-7 w-7 place-items-center bg-ink/[0.06] text-[10.5px] tracking-tight text-muted transition-colors hover:bg-ink hover:text-paper"
-          onClick={(e) => e.stopPropagation()}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            void copyLink();
+          }}
+          aria-label="Copy project link"
+          className="grid h-7 w-7 place-items-center bg-ink/[0.06] text-muted transition-colors hover:bg-ink hover:text-paper"
         >
-          {glyph}
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5" />
+            <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5" />
+          </svg>
         </button>
-      ))}
+      </div>
+      <AnimatePresence>
+        {copied && (
+          <motion.div
+            key="copied-toast"
+            initial={{ opacity: 0, y: -3 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22 }}
+            className="text-[10px] uppercase tracking-[0.18em] text-emerald-600"
+          >
+            Project Link Copied
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

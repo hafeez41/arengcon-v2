@@ -1,30 +1,20 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { useEffect, useState, type ReactNode } from "react";
-import clsx from "clsx";
+import { type ReactNode } from "react";
 import { useEffectiveContact } from "@/lib/effective-data";
 import { SOCIAL_PLATFORMS, type SocialKey } from "@/lib/admin-store";
-import { SIZE } from "@/lib/motion";
 
 export function SiteFooter() {
   const { contact } = useEffectiveContact();
   const activeSocial = SOCIAL_PLATFORMS.filter(
     (p) => !!contact.social[p.key as SocialKey],
   );
-  const [contactOpen, setContactOpen] = useState(false);
-
-  useEffect(() => {
-    const handler = () => setContactOpen(true);
-    window.addEventListener("arengcon:open-contact", handler);
-    return () => window.removeEventListener("arengcon:open-contact", handler);
-  }, []);
 
   return (
     <footer id="site-footer" className="border-t border-line">
       <div className="mx-auto w-full max-w-[1100px] px-5 py-12 md:px-8 md:py-16">
-        <div className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-3 sm:gap-x-10 sm:gap-y-4">
-          <Section label="Contact" forceOpen={contactOpen}>
+        <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-3 sm:gap-x-10 sm:gap-y-4">
+          <Section label="Contact">
             <ul className="space-y-1.5">
               {contact.emails.map((e) => (
                 <li key={e}>
@@ -75,7 +65,7 @@ export function SiteFooter() {
             </div>
           </Section>
 
-          <Section label="Social" disabled={activeSocial.length === 0}>
+          <Section label="Social">
             {activeSocial.length === 0 ? (
               <div className="text-[12px] text-muted">No social links yet.</div>
             ) : (
@@ -100,7 +90,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-line pt-6 text-[10.5px] uppercase tracking-[0.14em] text-muted md:mt-16 md:flex-row md:items-center md:pt-8">
-          <div>© {new Date().getFullYear()} Arengcon</div>
+          <div>© 2013 Arengcon</div>
           <div className="tracking-[0.14em]">An Abuja studio · Established 2013</div>
         </div>
       </div>
@@ -111,59 +101,16 @@ export function SiteFooter() {
 function Section({
   label,
   children,
-  disabled = false,
-  forceOpen = false,
 }: {
   label: string;
   children: ReactNode;
-  disabled?: boolean;
-  forceOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (forceOpen) setOpen(true);
-  }, [forceOpen]);
-
   return (
-    <div className="col-span-1 border-b border-line/0 md:border-b-0">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        disabled={disabled}
-        className={clsx(
-          "group flex w-full items-center justify-between gap-3 py-3 text-left transition-colors duration-200",
-          "text-[11px] uppercase tracking-[0.18em]",
-          disabled
-            ? "cursor-default text-muted/50"
-            : open
-              ? "text-ink"
-              : "text-muted hover:text-ink",
-        )}
-        aria-expanded={open}
-      >
-        <span>{label}</span>
-        <motion.span
-          aria-hidden
-          animate={{ rotate: open ? 45 : 0 }}
-          transition={SIZE}
-          className="text-[16px] leading-none"
-        >
-          +
-        </motion.span>
-      </button>
-
-      <div
-        aria-hidden={!open}
-        className={clsx(
-          "grid transition-[grid-template-rows,opacity] duration-[780ms] ease-[cubic-bezier(0.45,0,0.55,1)]",
-          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
-        )}
-      >
-        <div className="min-h-0 overflow-hidden">
-          <div className="pb-5 pt-2">{children}</div>
-        </div>
+    <div className="col-span-1">
+      <div className="py-3 text-[11px] uppercase tracking-[0.18em] text-muted">
+        {label}
       </div>
+      <div className="pb-1">{children}</div>
     </div>
   );
 }
