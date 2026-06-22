@@ -13,9 +13,11 @@ import { useProjectExpanded } from "./project-expanded-context";
 export function HomeView({
   filter = "all",
   subcategory,
+  focusSlug,
 }: {
   filter?: FilterKey;
   subcategory?: string;
+  focusSlug?: string;
 } = {}) {
   const { anyExpanded } = useProjectExpanded();
   return (
@@ -26,7 +28,11 @@ export function HomeView({
           {filter === "updates" ? (
             <UpdatesList />
           ) : (
-            <ProjectsList filter={filter} subcategory={subcategory} />
+            <ProjectsList
+              filter={filter}
+              subcategory={subcategory}
+              focusSlug={focusSlug}
+            />
           )}
         </div>
       </section>
@@ -64,7 +70,7 @@ export function resolveView(path: string): React.ReactNode {
   if (clean === "/services") return <ServicesView />;
 
   const projectMatch = clean.match(/^\/projects\/([^/]+)$/);
-  if (projectMatch) return <HomeView filter="all" />;
+  if (projectMatch) return <HomeView filter="all" focusSlug={projectMatch[1]} />;
 
   const { category, subcategory } = parseRouteFilter(clean);
   return <HomeView filter={category} subcategory={subcategory} />;

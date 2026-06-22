@@ -89,9 +89,8 @@ export function SiteFooter() {
 
         </div>
 
-        <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-line pt-6 text-[10.5px] uppercase tracking-[0.14em] text-muted md:mt-16 md:flex-row md:items-center md:pt-8">
-          <div>© 2013 Arengcon</div>
-          <div className="tracking-[0.14em]">An Abuja studio · Established 2013</div>
+        <div className="mt-12 border-t border-line pt-6 text-[10.5px] uppercase tracking-[0.14em] text-muted md:mt-16 md:pt-8">
+          Established 2013
         </div>
       </div>
     </footer>

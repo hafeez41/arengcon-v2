@@ -25,21 +25,42 @@ export type FilterKey = "all" | Category | "updates";
 export function ProjectsList({
   filter,
   subcategory,
+  focusSlug,
 }: {
   filter: FilterKey;
   subcategory?: string;
+  focusSlug?: string;
 }) {
-  const { list, adminProjects, isPlaceholder } = useEffectiveProjects();
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const { list, adminProjects, isPlaceholder, loaded } = useEffectiveProjects();
+  const [expanded, setExpanded] = useState<string | null>(focusSlug ?? null);
   const { setAnyExpanded } = useProjectExpanded();
+  const containerRef = useRef<HTMLUListElement>(null);
+  const handledFocus = useRef<string | null>(null);
 
   useEffect(() => {
-    setExpanded(null);
-  }, [filter, subcategory]);
+    setExpanded(focusSlug ?? null);
+    handledFocus.current = null;
+  }, [filter, subcategory, focusSlug]);
 
   useEffect(() => {
     setAnyExpanded(expanded !== null);
   }, [expanded, setAnyExpanded]);
+
+  // When arriving via /projects/<slug> (e.g. from search), scroll the matching
+  // row into view once the list has actually rendered. handledFocus guards
+  // against re-scrolling on every re-render.
+  useEffect(() => {
+    if (!focusSlug || !loaded) return;
+    if (handledFocus.current === focusSlug) return;
+    const el = containerRef.current?.querySelector<HTMLElement>(
+      `[data-project-slug="${CSS.escape(focusSlug)}"]`,
+    );
+    if (!el) return;
+    handledFocus.current = focusSlug;
+    requestAnimationFrame(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [focusSlug, loaded, list]);
 
   const handleClick = (slug: string) => {
     setExpanded((cur) => (cur === slug ? null : slug));
@@ -54,11 +75,12 @@ export function ProjectsList({
   const filterKey = subcategory ? `${filter}/${subcategory}` : `${filter}`;
 
   return (
-    <ul className="flex flex-col gap-y-1 desk:gap-y-2">
+    <ul ref={containerRef} className="flex flex-col gap-y-1 desk:gap-y-2">
       <AnimatePresence mode="popLayout" initial={true}>
         {filtered.map((p) => (
           <motion.li
             key={`${filterKey}-${p.slug}`}
+            data-project-slug={p.slug}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -344,7 +366,7 @@ function ProjectRow({
             {!expanded && (
               <span
                 aria-hidden
-                className="pointer-events-none absolute left-1/2 top-1/2 flex h-11 w-36 -translate-x-1/2 -translate-y-1/2 items-center justify-center bg-paper/85 text-[10.5px] uppercase tracking-[0.18em] text-ink backdrop-blur-[2px] transition-opacity duration-300 desk:opacity-40 desk:group-hover:opacity-100"
+                className="pointer-events-none absolute left-1/2 top-1/2 flex h-11 w-36 -translate-x-1/2 -translate-y-1/2 items-center justify-center bg-paper/85 text-[10.5px] uppercase tracking-[0.18em] text-ink backdrop-blur-[2px]"
               >
                 Open Project
               </span>
